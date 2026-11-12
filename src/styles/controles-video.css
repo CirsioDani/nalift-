@@ -1,0 +1,218 @@
+/* Controles de vídeo próprios (src/scripts/controles-video.js). Tudo fica DENTRO do quadro do vídeo (que tem
+   position: relative, overflow: hidden e cantos arredondados), então nada é cortado. Cores só pelas variáveis. */
+
+/* Camada que recebe o toque no vídeo. */
+.cv__area {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Botão central de play/pause. Antes do primeiro play leva o "Toque para assistir" embaixo. */
+.cv__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--cor-sobre-primaria);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+.cv__play-icone {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  background: color-mix(in srgb, var(--cor-primaria) 88%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--cor-texto) 60%, transparent);
+}
+
+.cv__play-icone svg {
+  margin-left: 3px; /* centraliza o triângulo do play */
+}
+
+.cv.tocando .cv__play-icone svg {
+  margin-left: 0;
+}
+
+.cv__play-texto {
+  padding: 0.375rem 0.875rem;
+  white-space: nowrap; /* o botão é posicionado a partir do centro e encolhe: sem isso, o rótulo quebra em 2 linhas */
+  background: color-mix(in srgb, var(--cor-primaria) 88%, transparent);
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.cv.iniciado .cv__play-texto {
+  display: none;
+}
+
+/* Enquanto toca, o botão some (e volta ao tocar no vídeo, que o deixa à mostra por um instante). */
+.cv.tocando:not(.cv-ativo) .cv__play {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Som: pequeno, no canto superior direito (só depois que o vídeo começa). Área de toque de 44px. */
+.cv__som {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  display: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--cor-primaria);
+  cursor: pointer;
+}
+
+.cv.iniciado .cv__som {
+  display: grid;
+}
+
+.cv__som-icone {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: color-mix(in srgb, var(--cor-fundo) 85%, transparent);
+  border-radius: 50%;
+}
+
+/* Barra de progresso: fina (bordô sobre rosé claro), com área de toque de 44px de altura. Só depois que o vídeo
+   começa. touch-action: none para arrastar a barra não rolar a faixa de vídeos. */
+.cv__barra {
+  position: absolute;
+  right: 14px;
+  bottom: 0;
+  left: 14px;
+  z-index: 3;
+  display: none;
+  align-items: flex-end;
+  height: 44px;
+  padding-bottom: 12px;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.cv.iniciado .cv__barra {
+  display: flex;
+}
+
+/* Faixa visível (fina, 4px; engrossa para 6px ao tocar, passar o mouse ou focar). A barra inteira é a área de toque. */
+.cv__faixa {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 4px;
+}
+
+.cv__trilho {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--cor-destaque) 80%, var(--cor-fundo));
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cor-texto) 15%, transparent);
+}
+
+.cv__preenchimento {
+  position: absolute;
+  inset: 0;
+  background: var(--cor-primaria);
+  border-radius: inherit;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.cv__barra:hover .cv__faixa,
+.cv--arrastando .cv__faixa,
+.cv__barra:focus-visible .cv__faixa {
+  height: 6px;
+}
+
+/* Bolinha na posição atual: aparece enquanto a pessoa arrasta (e ao passar o mouse ou focar a barra). A posição vem
+   da variável --cv-pos (0 a 1), definida pelo script. */
+.cv__bolinha {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--cv-pos, 0) * 100%);
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  background: var(--cor-primaria);
+  border: 2px solid var(--cor-fundo);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--cor-texto) 35%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.6);
+}
+
+.cv--arrastando .cv__bolinha,
+.cv__barra:focus-visible .cv__bolinha {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (hover: hover) {
+  .cv__barra:hover .cv__bolinha {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cv__play:focus-visible,
+.cv__som:focus-visible,
+.cv__barra:focus-visible {
+  outline: 3px solid var(--cor-primaria);
+  outline-offset: -4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cv__play {
+    transition: opacity 400ms ease;
+  }
+
+  .cv__faixa {
+    transition: height 150ms ease;
+  }
+
+  .cv__bolinha {
+    transition:
+      opacity 150ms ease,
+      transform 150ms ease;
+  }
+
+  .cv__preenchimento {
+    transition: transform 260ms linear;
+  }
+
+  .cv--arrastando .cv__preenchimento {
+    transition: none;
+  }
+}

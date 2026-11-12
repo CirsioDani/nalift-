@@ -1,0 +1,110 @@
+---
+// Seda decorativa (a mesma da Abertura), usada só em mais dois lugares: atrás da foto da seção "Sobre" e no
+// fechamento da página (slogan + monograma). As outras seções continuam com o fundo liso.
+// Usa as MESMAS imagens das fitas da Abertura (já em cache, nenhum arquivo novo), cada lugar com um recorte, zoom e
+// espelhamento diferentes para não parecer repetida. Imagem estática (sem animação, sem JavaScript, sem custo no
+// celular), com bordas totalmente dissolvidas por máscara nos quatro lados: nenhum corte, linha ou degrau. As fitas das
+// imagens ficam perto das bordas, então cada variante dá zoom/desloca o recorte para a fita passar pelo meio da área,
+// onde a máscara deixa ver. Fica atrás de todo o conteúdo (quem a usa põe os textos acima com position: relative +
+// z-index).
+//  variante "sobre": atrás da foto. Celular: a foto cobre o alto da seção, então a seda fica na metade de baixo, mais
+//    suave, saindo por trás da foto e passando atrás dos textos. PC: ao lado esquerdo da foto (fita 2 espelhada).
+//  variante "fecho": atrás do slogan e do monograma (fita 1: no PC espelhada, no celular com zoom).
+interface Props {
+  variante: 'sobre' | 'fecho';
+}
+const { variante } = Astro.props;
+// [fita no PC/paisagem, fita no celular/retrato]
+const fitas = variante === 'sobre' ? [2, 1] : [1, 1];
+---
+
+<div class={`seda seda--${variante}`} aria-hidden="true">
+  <picture>
+    <source media="(orientation: landscape)" srcset={`/midia/fitas/paisagem-${fitas[0]}.webp`} />
+    <img src={`/midia/fitas/retrato-${fitas[1]}.webp`} alt="" width="432" height="752" loading="lazy" decoding="async" fetchpriority="low" />
+  </picture>
+</div>
+
+<style>
+  .seda {
+    /* Degradê simétrico (0 nas pontas, 1 no meio): a seda se dissolve por completo em todos os lados. */
+    --rampa: transparent 0%, rgb(0 0 0 / 0.08) 6%, rgb(0 0 0 / 0.3) 12%, rgb(0 0 0 / 0.65) 19%, rgb(0 0 0 / 0.92) 26%, #000 32%,
+      #000 68%, rgb(0 0 0 / 0.92) 74%, rgb(0 0 0 / 0.65) 81%, rgb(0 0 0 / 0.3) 88%, rgb(0 0 0 / 0.08) 94%, transparent 100%;
+
+    position: absolute;
+    overflow: hidden;
+    opacity: var(--seda-opacidade, 0.5);
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(to right, var(--rampa)), linear-gradient(to bottom, var(--rampa));
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, var(--rampa)), linear-gradient(to bottom, var(--rampa));
+    mask-composite: intersect;
+  }
+
+  .seda img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+  }
+
+  /* ----- Sobre. Só no PC. No celular a foto ocupa quase toda a largura e cobre a seda, e o que sobra (um trecho
+     fraco ao lado dos textos) parecia uma mancha: por decisão de qualidade, no celular e no tablet a seda não aparece
+     (display: none; a imagem nem chega a ser baixada, pois é preguiçosa). ----- */
+  .seda--sobre {
+    display: none;
+  }
+
+  /* PC: ao lado esquerdo da foto, na coluna da direita (a fita sai por trás do cartão da foto). */
+  @media (min-width: 64rem) {
+    .seda--sobre {
+      --seda-opacidade: 0.8;
+
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 42%;
+      display: block;
+    }
+
+    .seda--sobre img {
+      object-position: 100% 50%;
+      transform: scaleX(-1);
+    }
+  }
+
+  /* ----- Fecho: atrás do slogan e do monograma, um pouco além das laterais do conteúdo. Celular: zoom na parte de
+     baixo da fita, em diagonal. ----- */
+  .seda--fecho {
+    --seda-opacidade: 0.55;
+
+    top: -2rem;
+    right: calc(var(--gutter) * -1);
+    bottom: -1.5rem;
+    left: calc(var(--gutter) * -1);
+  }
+
+  .seda--fecho img {
+    object-position: 50% 85%;
+    transform: scale(1.6);
+    transform-origin: 50% 85%;
+  }
+
+  /* PC: a fita atravessa a largura toda, como uma faixa de seda, espelhada em relação à Abertura. */
+  @media (min-width: 64rem) {
+    .seda--fecho img {
+      object-position: 50% 78%;
+      transform: scaleX(-1);
+      transform-origin: 50% 50%;
+    }
+  }
+
+  /* Telas largas: a faixa de seda passa um pouco das laterais do conteúdo (há margem da página para isso). */
+  @media (min-width: 80rem) {
+    .seda--fecho {
+      right: -5rem;
+      left: -5rem;
+    }
+  }
+</style>

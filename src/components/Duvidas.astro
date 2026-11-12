@@ -1,0 +1,358 @@
+---
+// Seção 7: "Dúvidas". Textos em src/content/duvidas.ts.
+// Só o vídeo em destaque "Bate-bola com a Gabriela" (9:16 inteiro) com os controles próprios do site e atalhos por
+// pergunta: ao tocar, o vídeo vai para o momento e toca; a pergunta que está passando fica destacada. Fecha com
+// "Ainda com dúvida? Me chama no WhatsApp que eu te explico tudo." (o FAQ em texto foi removido por decisão do usuário).
+//  - Celular (e tablet): título, vídeo e, abaixo, os atalhos em "pílulas" (fileira que desliza no celular).
+//  - PC (≥64rem): vídeo e coluna da direita formam UM bloco centralizado (máx. 60rem): título no topo da coluna,
+//    uma linha de apoio e as perguntas como ÍNDICE DE CAPÍTULOS (tempo + pergunta, linhas finas, barra de progresso
+//    do capítulo atual), alinhados ao centro do vídeo.
+// Entrada ao rolar pelo sistema único (data-reveal); o fundo e a emenda vêm da regra global.
+import '../styles/controles-video.css';
+import { duvidas } from '../content/duvidas';
+
+const v = duvidas.video;
+---
+
+<section class="secao duvidas" id="duvidas" aria-labelledby="duvidas-titulo" data-toque={v.toque}>
+  <div class="secao__miolo">
+    <div class="duvidas__layout">
+      <h2 class="duvidas__titulo" id="duvidas-titulo" data-reveal="subir">{duvidas.titulo}</h2>
+      <p class="duvidas__intro" data-reveal="subir">{duvidas.intro}</p>
+
+      <div class="duvidas__quadro" data-reveal="zoom">
+        <!-- Sem JavaScript: o vídeo usa os controles do navegador. Com JavaScript: controles próprios. -->
+        <video class="duvidas__video" controls playsinline preload="none" poster={v.poster} width={v.largura} height={v.altura} aria-label={v.rotulo}>
+          <source src={v.src} type="video/mp4" />
+        </video>
+      </div>
+
+      <div class="duvidas__chips" role="group" aria-label={duvidas.rotuloChips} data-reveal="subir">
+        {
+          duvidas.chips.map((chip) => (
+            <button class="duvidas__chip" type="button" data-t={chip.t} aria-label={`${chip.texto} (vai para ${chip.rotuloTempo} do vídeo)`}>
+              <span class="duvidas__tempo" aria-hidden="true">{chip.rotuloTempo}</span>
+              <span class="duvidas__pergunta">{chip.texto}</span>
+            </button>
+          ))
+        }
+      </div>
+    </div>
+
+    <p class="duvidas__cta" data-reveal="subir">
+      {duvidas.cta.antes}<a class="duvidas__cta-link" href={duvidas.cta.href} target="_blank" rel="noopener noreferrer"
+        >{duvidas.cta.link}</a
+      >{duvidas.cta.depois}
+    </p>
+  </div>
+</section>
+
+<script>
+  import '../scripts/duvidas.js';
+</script>
+
+<style>
+  /* ===== Celular e tablet: título, vídeo e atalhos, um embaixo do outro, centralizados ===== */
+  .duvidas__layout {
+    display: grid;
+    justify-items: center;
+    gap: 1rem;
+    /* Altura do vídeo: o conjunto título + vídeo + chips cabe numa tela de celular (100svh), com folga para o menu
+       fixo do topo. */
+    --duvidas-alt: clamp(16rem, calc(100vh - 12rem), 40rem);
+    --duvidas-alt: clamp(16rem, calc(100svh - 12rem), 40rem);
+  }
+
+  .duvidas__titulo {
+    margin: 0 0 0.25rem;
+    text-align: center;
+  }
+
+  /* A linha de apoio só existe no PC. */
+  .duvidas__intro {
+    display: none;
+  }
+
+  .duvidas__quadro {
+    position: relative;
+    height: var(--duvidas-alt);
+    overflow: hidden;
+    aspect-ratio: 9 / 16;
+    background: var(--cor-fundo-alt);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra-suave);
+  }
+
+  .duvidas__video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Os atalhos só existem com JavaScript (mexem no vídeo). */
+  .duvidas__chips {
+    display: none;
+  }
+
+  :global(.duvidas--ativo) .duvidas__chips {
+    display: flex;
+  }
+
+  /* Celular: uma fileira de "pílulas" que desliza para o lado, de ponta a ponta da tela (a próxima "espia" pela borda). */
+  .duvidas__chips {
+    gap: 0.5rem;
+    width: calc(100% + var(--gutter) * 2);
+    margin-inline: calc(var(--gutter) * -1);
+    padding: 0.25rem var(--gutter);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    scroll-padding-inline: var(--gutter);
+    scroll-snap-type: x proximity;
+  }
+
+  .duvidas__chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .duvidas__chip {
+    position: relative;
+    flex: none;
+    min-height: 44px;
+    padding: 0 1.1rem;
+    background: transparent;
+    border: 1.5px solid var(--cor-primaria);
+    border-radius: 999px;
+    color: var(--cor-primaria);
+    cursor: pointer;
+    font-family: var(--fonte-texto);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.2;
+    scroll-snap-align: start;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  /* O tempo só aparece no índice do PC. */
+  .duvidas__tempo {
+    display: none;
+  }
+
+  .duvidas__chip:focus-visible {
+    outline: 3px solid var(--cor-primaria);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) {
+    .duvidas__chip:hover {
+      background: var(--cor-fundo-alt);
+    }
+  }
+
+  /* A pergunta que está passando no vídeo fica destacada (pílula preenchida em bordô). */
+  .duvidas__chip[aria-current='true'],
+  .duvidas__chip[aria-current='true']:hover {
+    background: var(--cor-primaria);
+    color: var(--cor-sobre-primaria);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .duvidas__chip {
+      transition:
+        background-color 250ms ease,
+        color 250ms ease;
+    }
+  }
+
+  /* Tablet: há largura de sobra, então as pílulas quebram em linhas centralizadas (nada fica escondido na rolagem). */
+  @media (min-width: 48rem) {
+    .duvidas__chips {
+      flex-wrap: wrap;
+      justify-content: center;
+      width: auto;
+      margin-inline: 0;
+      padding-inline: 0;
+      overflow: visible;
+    }
+  }
+
+  /* ===== PC (a partir de 1024px): bloco único, centralizado, vídeo à esquerda e índice de capítulos à direita ===== */
+  @media (min-width: 64rem) {
+    .duvidas__layout {
+      /* Vídeo no máximo ~75% da altura da tela: o bloco inteiro cabe em 1280x800. */
+      --duvidas-alt: clamp(24rem, 75vh, 40rem);
+      --duvidas-alt: clamp(24rem, 75svh, 40rem);
+
+      /* A coluna da direita ocupa as linhas 2 a 4; as linhas 1 e 5 (iguais, flexíveis) a mantêm no centro do vídeo. */
+      grid-template-areas:
+        'video .'
+        'video titulo'
+        'video intro'
+        'video chips'
+        'video .';
+      grid-template-columns: auto minmax(0, 30rem);
+      grid-template-rows: minmax(0, 1fr) auto auto auto minmax(0, 1fr);
+      justify-content: center;
+      justify-items: stretch;
+      max-width: 60rem; /* ~960px */
+      margin-inline: auto;
+      column-gap: 3.5rem; /* 56px entre as colunas */
+      row-gap: 0;
+      text-align: left;
+    }
+
+    .duvidas__quadro {
+      grid-area: video;
+      align-self: center;
+      justify-self: end;
+    }
+
+    .duvidas__titulo {
+      grid-area: titulo;
+      margin: 0 0 0.75rem;
+      text-align: left;
+    }
+
+    .duvidas__intro {
+      display: block;
+      grid-area: intro;
+      max-width: 28rem;
+      margin: 0 0 1.5rem;
+    }
+
+    .duvidas__chips {
+      grid-area: chips;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 0;
+      width: auto;
+      margin: 0;
+      padding: 0;
+      overflow: visible;
+      scroll-snap-type: none;
+    }
+
+    /* Cada pergunta é uma linha do índice (como a lista numerada da seção 3): tempo à esquerda, pergunta ao lado em
+       tamanho maior, linhas finas entre os itens. A linha inteira é clicável. */
+    .duvidas__chip {
+      display: grid;
+      grid-template-columns: 4.25rem minmax(0, 1fr);
+      align-items: center;
+      width: 100%;
+      min-height: 3.75rem;
+      padding: 0.75rem 0.5rem;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid color-mix(in srgb, var(--cor-primaria) 18%, transparent);
+      border-radius: 0;
+      color: var(--cor-texto);
+      scroll-snap-align: none;
+      white-space: normal;
+    }
+
+    .duvidas__chip:first-child {
+      border-top: 1px solid color-mix(in srgb, var(--cor-primaria) 18%, transparent);
+    }
+
+    .duvidas__tempo {
+      display: block;
+      color: var(--cor-secundaria);
+      font-family: var(--fonte-titulo);
+      font-size: 1.1875rem;
+      font-variant-numeric: lining-nums;
+      font-weight: 500;
+    }
+
+    .duvidas__pergunta {
+      font-family: var(--fonte-titulo);
+      font-size: 1.5rem;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+
+    /* Barra fina embaixo da linha: mostra o progresso do capítulo que está passando (--prog, de 0 a 1). */
+    .duvidas__chip::after {
+      position: absolute;
+      right: 0;
+      bottom: -1px;
+      left: 0;
+      height: 2px;
+      background: var(--cor-primaria);
+      content: '';
+      opacity: 0;
+      transform: scaleX(var(--prog, 0));
+      transform-origin: left center;
+    }
+
+    @media (hover: hover) {
+      .duvidas__chip:hover {
+        background: color-mix(in srgb, var(--cor-fundo-alt) 55%, transparent);
+      }
+    }
+
+    /* Capítulo atual: tempo e texto em bordô (sem a pílula preenchida do celular) e a barra de progresso. */
+    .duvidas__chip[aria-current='true'],
+    .duvidas__chip[aria-current='true']:hover {
+      background: transparent;
+      color: var(--cor-primaria);
+    }
+
+    .duvidas__chip[aria-current='true'] .duvidas__tempo {
+      color: var(--cor-primaria);
+    }
+
+    .duvidas__chip[aria-current='true']::after {
+      opacity: 1;
+    }
+
+    .duvidas__chip:focus-visible {
+      outline-offset: -3px;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .duvidas__chip {
+        transition:
+          background-color 250ms ease,
+          color 250ms ease;
+      }
+
+      .duvidas__tempo {
+        transition: color 250ms ease;
+      }
+
+      .duvidas__chip::after {
+        transition:
+          transform 300ms linear,
+          opacity 250ms ease;
+      }
+    }
+  }
+
+  /* ===== Fecho ===== */
+  .duvidas__cta {
+    max-width: 30rem;
+    margin: 2.5rem auto 0;
+    font-family: var(--fonte-titulo);
+    font-size: clamp(1.375rem, 4.5vw, 1.75rem);
+    font-weight: 500;
+    line-height: 1.35;
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .duvidas__cta-link {
+    padding-block: 0.5rem; /* área de toque maior que a linha de texto */
+    color: var(--cor-primaria);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
+
+  .duvidas__cta-link:hover {
+    color: var(--cor-secundaria);
+  }
+</style>

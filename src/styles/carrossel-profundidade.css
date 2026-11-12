@@ -1,0 +1,221 @@
+/* Carrossel em profundidade (cartas empilhadas). CSS recriado a partir do DepthCarousel (React Bits),
+   com as cores da paleta do site: sombra das cartas de trás em marrom/bordô, setas e pontinhos em bordô e
+   rosé sobre o fundo nude (sem os fundos escuros do original). */
+.depth-carousel {
+  --dc-perspective: 1400px;
+  --dc-radius: 18px;
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  outline: none;
+  touch-action: pan-y; /* deslizar na vertical rola a página; na horizontal troca de carta */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.depth-carousel:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--cor-primaria);
+}
+
+.depth-carousel__viewport {
+  position: relative;
+  min-height: 0;
+  perspective: var(--dc-perspective);
+  perspective-origin: 50% 45%;
+}
+
+.depth-carousel__stage {
+  position: absolute;
+  inset: 0;
+  /* Sem toque no palco: num contexto 3D o próprio palco (z = 0) ficava na frente das cartas de trás (z negativo) na hora
+     de decidir quem recebe o clique, e tocar numa carta de trás não fazia nada. As cartas têm pointer-events próprio
+     (definido pelo script: só as que estão na fila recebem toque). */
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+.depth-carousel__card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  overflow: hidden;
+  background: var(--cor-fundo-alt);
+  border-radius: var(--dc-radius);
+  box-shadow:
+    0 26px 40px -22px color-mix(in srgb, var(--cor-texto) 55%, transparent),
+    0 8px 18px -10px color-mix(in srgb, var(--cor-texto) 40%, transparent);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.depth-carousel__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* a carta tem a proporção do vídeo (9:16): nada é cortado */
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+/* Sombra das cartas de trás, em marrom/bordô. */
+.depth-carousel__tint {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--cor-primaria) 45%, var(--cor-texto));
+  mix-blend-mode: multiply;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Setas e pontinhos: numa linha abaixo das cartas, com áreas de toque de 44px. */
+.depth-carousel__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.depth-carousel__arrow {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-destaque);
+  border-radius: 50%;
+  color: var(--cor-primaria);
+  cursor: pointer;
+}
+
+.depth-carousel__arrow:hover {
+  background: var(--cor-fundo-alt);
+  border-color: var(--cor-secundaria);
+}
+
+.depth-carousel__arrow:focus-visible,
+.depth-carousel__dot:focus-visible {
+  outline: 3px solid var(--cor-primaria);
+  outline-offset: 2px;
+}
+
+.depth-carousel__dots {
+  display: flex;
+  align-items: center;
+}
+
+.depth-carousel__dot {
+  position: relative;
+  width: 28px;
+  height: 44px;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.depth-carousel__dot::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: var(--cor-destaque);
+  border-radius: 999px;
+  content: '';
+  transform: translate(-50%, -50%);
+}
+
+.depth-carousel__dot.is-active::before {
+  width: 24px;
+  background: var(--cor-primaria);
+}
+
+/* ---- Vídeo na carta da frente (seção Depoimentos) ---- */
+.depoimentos__video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  object-fit: contain;
+}
+
+.depoimentos__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  background: color-mix(in srgb, var(--cor-primaria) 88%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--cor-texto) 60%, transparent);
+  color: var(--cor-sobre-primaria);
+  pointer-events: none;
+}
+
+.depoimentos__play svg {
+  margin-left: 3px;
+}
+
+.depth-carousel__card.esta-tocando .depoimentos__play {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .depth-carousel__dot::before {
+    transition:
+      width 0.25s ease,
+      background-color 0.25s ease;
+  }
+
+  .depth-carousel__arrow {
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .depth-carousel__arrow:active {
+    transform: scale(0.94);
+  }
+
+  .depoimentos__play {
+    transition:
+      opacity 0.25s ease,
+      transform 0.25s ease;
+  }
+
+  .depth-carousel__card.esta-tocando .depoimentos__play {
+    transform: scale(0.8);
+  }
+
+  .depth-carousel__card.carregando .depoimentos__play {
+    animation: depoimentos-pulso 1s ease-in-out infinite;
+  }
+
+  @keyframes depoimentos-pulso {
+    50% {
+      transform: scale(0.88);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .depth-carousel__card {
+    will-change: auto;
+  }
+}

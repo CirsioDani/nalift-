@@ -1,0 +1,273 @@
+/* Paleta: usar sempre pelas variáveis, nunca cores soltas no código. */
+:root {
+  --cor-primaria: #7a1f2b;
+  --cor-secundaria: #8c4a4a;
+  --cor-destaque: #ddbfb5;
+  --cor-fundo: #f7f1eb;
+  --cor-fundo-alt: #eadfd4;
+  --cor-texto: #3a2e28;
+  --cor-sobre-primaria: #ffffff; /* texto sobre botão/fundo bordô */
+  --cor-logo: #9f1a1a; /* vermelho original do logo GW (só o logo usa) */
+
+  /* Entrada ao rolar (data-reveal): o mesmo ritmo em tudo. */
+  --reveal-tempo: 600ms;
+  --reveal-ease: cubic-bezier(0.22, 0.61, 0.36, 1); /* ease-out suave */
+  --reveal-escalonado: 80ms;
+  --reveal-subida: 24px;
+  --reveal-escala: 0.96;
+
+  --fonte-titulo: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --fonte-texto: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --raio: 20px;
+  --sombra-suave: 0 8px 24px rgb(58 46 40 / 0.08);
+  --respiro: clamp(3.5rem, 10vw, 7rem);
+  --largura-max: 68rem;
+  --gutter: 1.25rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: clip; /* nenhuma seção pode criar rolagem horizontal */
+  /* Fundo da raiz = nude: é a cor que aparece acima da Abertura e abaixo do rodapé no puxão elástico da rolagem. */
+  background: var(--cor-fundo);
+}
+
+/* Rolagem suave nativa ao tocar num atalho do menu (âncoras #secao). Não é "smooth scroll customizado": a rolagem
+   com o dedo continua 100% nativa. Sem animação para quem pediu movimento reduzido. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  overflow-x: clip;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: var(--fonte-texto);
+  font-size: 1rem; /* 16px: mínimo no celular */
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 0.5em;
+  color: var(--cor-primaria);
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 9vw, 4.5rem);
+}
+
+h2 {
+  font-size: clamp(2rem, 6vw, 3rem);
+}
+
+p {
+  margin: 0 0 1em;
+  text-wrap: pretty;
+}
+
+img,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--cor-secundaria);
+}
+
+:focus-visible {
+  outline: 3px solid var(--cor-primaria);
+  outline-offset: 3px;
+}
+
+/* Texto só para leitores de tela (fica fora da vista, mas continua na árvore de acessibilidade). */
+.sr-somente {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+/* Bloco de seção reutilizável */
+.secao {
+  padding: var(--respiro) var(--gutter);
+}
+
+/* Emendas suaves entre seções (padrão do site): as seções pares têm fundo bege (--cor-fundo-alt) e as ímpares
+   nude (--cor-fundo). Em vez de um corte seco, o bege nasce do nude no topo e volta ao nude embaixo, num degradê
+   suave (curva "smoothstep", sem banda visível). Nas emendas, as duas seções têm exatamente a mesma cor. Não definir
+   background próprio em seções: usar só esta regra (a alternância vem da posição da seção). */
+.secao:nth-of-type(even) {
+  --emenda: clamp(3.5rem, 14vw, 7rem); /* altura da passagem de cor */
+
+  background: linear-gradient(
+    to bottom,
+    var(--cor-fundo) 0,
+    color-mix(in srgb, var(--cor-fundo-alt) 16%, var(--cor-fundo)) calc(var(--emenda) * 0.25),
+    color-mix(in srgb, var(--cor-fundo-alt) 50%, var(--cor-fundo)) calc(var(--emenda) * 0.5),
+    color-mix(in srgb, var(--cor-fundo-alt) 84%, var(--cor-fundo)) calc(var(--emenda) * 0.75),
+    var(--cor-fundo-alt) var(--emenda),
+    var(--cor-fundo-alt) calc(100% - var(--emenda)),
+    color-mix(in srgb, var(--cor-fundo-alt) 84%, var(--cor-fundo)) calc(100% - var(--emenda) * 0.75),
+    color-mix(in srgb, var(--cor-fundo-alt) 50%, var(--cor-fundo)) calc(100% - var(--emenda) * 0.5),
+    color-mix(in srgb, var(--cor-fundo-alt) 16%, var(--cor-fundo)) calc(100% - var(--emenda) * 0.25),
+    var(--cor-fundo) 100%
+  );
+}
+
+.secao__miolo {
+  max-width: var(--largura-max);
+  margin-inline: auto;
+}
+
+/* ===== Entrada ao rolar: sistema ÚNICO do site (padrão obrigatório; ver CLAUDE.md) =====
+   Atributos (script em src/scripts/revelar.js):
+   - data-reveal="subir": fade + sobe 24px (títulos e textos).
+   - data-reveal="escalonado": no CONTÊINER; cada filho direto entra com 80ms de diferença do anterior
+     (cards, itens de lista, vídeos). Com data-reveal-efeito="zoom" no contêiner, os filhos entram em zoom.
+   - data-reveal="zoom": fade + escala de 0,96 para 1 (fotos e vídeos).
+   - data-reveal="gatilho": não anima nada; só marca .revelado ao entrar na tela, para efeitos PRÓPRIOS
+     (por exemplo, o desenho do rosto da seção 3). Não usar em quem já tem animação de entrada própria.
+   Mesmo ritmo em tudo: 600ms, ease-out suave, uma única vez, quando ~15% do elemento entra na tela.
+   Só transform e opacity.
+   Regra do projeto: o conteúdo é visível por padrão. O estado invisível só existe com a classe .js no <html>
+   (criada pelo script do Base.astro), sem prefers-reduced-motion, e é desfeito por .js-sem-script se o
+   script principal não carregar. Ao terminar a entrada, o script remove o data-reveal do elemento (ele
+   volta a ter só os estilos e as transições próprios). */
+@media (prefers-reduced-motion: no-preference) {
+  .js:not(.js-sem-script) :is([data-reveal='subir'], [data-reveal='zoom'], [data-reveal='escalonado'] > *) {
+    transition:
+      opacity var(--reveal-tempo) var(--reveal-ease),
+      transform var(--reveal-tempo) var(--reveal-ease);
+  }
+
+  .js:not(.js-sem-script) [data-reveal='escalonado'] > * {
+    transition-delay: calc(var(--i, 0) * var(--reveal-escalonado));
+  }
+
+  /* Estado inicial (escondido). No "escalonado" padrão, o contêiner inteiro é observado e todos os filhos
+     entram quando ele aparece. Com data-reveal-observar="filhos" (por exemplo, o carrossel de cards deslizável
+     da seção 2), cada filho é observado sozinho: o próximo card entra subindo quando aparece na tela, e os que
+     aparecem juntos mantêm o escalonado de 80ms. */
+  .js:not(.js-sem-script)
+    :is(
+      [data-reveal='subir']:not(.revelado),
+      [data-reveal='escalonado']:not([data-reveal-observar]):not(.revelado) > *,
+      [data-reveal='escalonado'][data-reveal-observar='filhos'] > :not(.revelado)
+    ) {
+    opacity: 0;
+    transform: translateY(var(--reveal-subida));
+  }
+
+  .js:not(.js-sem-script)
+    :is(
+      [data-reveal='zoom']:not(.revelado),
+      [data-reveal='escalonado'][data-reveal-efeito='zoom']:not([data-reveal-observar]):not(.revelado) > *,
+      [data-reveal='escalonado'][data-reveal-efeito='zoom'][data-reveal-observar='filhos'] > :not(.revelado)
+    ) {
+    opacity: 0;
+    transform: scale(var(--reveal-escala));
+  }
+}
+
+/* Anotação manuscrita do nome na seção 6 (Sobre), efeito de escrita à mão (uma única vez, quando a anotação entra na
+   tela: data-reveal="gatilho" marca .revelado): primeiro o traço curvo é "desenhado" (stroke-dashoffset, 0,8 s) e, logo
+   em seguida, "NaLift" é revelado da esquerda para a direita por uma máscara de borda suave (0,9 s), como se uma caneta
+   estivesse escrevendo. Mesma regra do sistema: sem JavaScript, com movimento reduzido ou se o script não carregar,
+   tudo já aparece pronto. */
+@media (prefers-reduced-motion: no-preference) {
+  .js:not(.js-sem-script) .sobre__traco path {
+    stroke-dasharray: 1;
+    transition: stroke-dashoffset 800ms cubic-bezier(0.4, 0, 0.2, 1) 450ms;
+  }
+
+  .js:not(.js-sem-script) .sobre__nota:not(.revelado) .sobre__traco path {
+    stroke-dashoffset: 1;
+  }
+
+  /* A máscara é um degradê 3x mais largo que a palavra, com uma borda suave (de opaco para transparente) entre 40% e
+     50% dele; deslizar a máscara (mask-position, que anima em todo navegador) varre a borda pela palavra, da esquerda
+     para a direita. O respiro (padding) evita cortar os floreios da letra, que passam da caixa do texto; as margens
+     negativas devolvem o texto ao mesmo lugar. */
+  .js:not(.js-sem-script) .sobre__nota-palavra {
+    padding: 0.3em 0.4em;
+    margin: -0.3em -0.4em;
+    -webkit-mask-image: linear-gradient(to right, #000 0%, #000 40%, transparent 50%);
+    mask-image: linear-gradient(to right, #000 0%, #000 40%, transparent 50%);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 300% 100%;
+    mask-size: 300% 100%;
+    -webkit-mask-position: 0% 0;
+    mask-position: 0% 0;
+    transition:
+      -webkit-mask-position 900ms cubic-bezier(0.45, 0.05, 0.25, 1) 1250ms,
+      mask-position 900ms cubic-bezier(0.45, 0.05, 0.25, 1) 1250ms;
+  }
+
+  /* 76%: a borda suave acaba de sair da palavra (sem tempo "morto" antes de a escrita começar). */
+  .js:not(.js-sem-script) .sobre__nota:not(.revelado) .sobre__nota-palavra {
+    -webkit-mask-position: 76% 0;
+    mask-position: 76% 0;
+  }
+}
+
+/* Seção reservada, aguardando conteúdo: só o espaço, sem texto. */
+.secao--vazia {
+  min-height: 16rem;
+}
+
+.provisorio {
+  margin: 0;
+  color: var(--cor-secundaria);
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --gutter: 2rem;
+  }
+}
+
+@media (min-width: 80rem) {
+  :root {
+    --gutter: 3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

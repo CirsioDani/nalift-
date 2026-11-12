@@ -1,0 +1,83 @@
+---
+import '@fontsource/eb-garamond/latin-500.css';
+import '@fontsource/eb-garamond/latin-600.css';
+import '@fontsource/eb-garamond/latin-500-italic.css'; // itálico (seção 6: cargo)
+import '@fontsource-variable/inter/index.css';
+import '../styles/global.css';
+// Endereços (com o nome final do arquivo) das fontes usadas já na primeira tela (Abertura): pré-carregadas no <head>
+// para não esperarem o CSS ser lido. Os outros arquivos (itálico, Pinyon Script) carregam sob demanda.
+import interUrl from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+import garamond500Url from '@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2?url';
+import garamond600Url from '@fontsource/eb-garamond/files/eb-garamond-latin-600-normal.woff2?url';
+
+interface Props {
+  titulo?: string;
+  descricao?: string;
+}
+
+// Endereço público e imagem de compartilhamento. [CONFIRMAR NO LANÇAMENTO] Se o site ganhar domínio próprio,
+// trocar SITE_URL aqui (og:url e og:image precisam do endereço final, absoluto).
+const SITE_URL = 'https://metodo-nalift.pages.dev/';
+const IMAGEM_OG = new URL('og-nalift.png', SITE_URL).href;
+
+const {
+  titulo = 'Método NaLift · Gabriela Nalin',
+  descricao = 'Lifting facial não cirúrgico que olha para o rosto como um todo.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={descricao} />
+    <meta name="robots" content="noindex" />
+    <!-- Cor da barra do navegador no celular: o nude do site (--cor-fundo, #F7F1EB; meta tag não aceita variável CSS). -->
+    <meta name="theme-color" content="#F7F1EB" />
+    <title>{titulo}</title>
+
+    <!-- Fontes da primeira tela, pré-carregadas (fontes sempre pedem crossorigin, mesmo no mesmo domínio). -->
+    <link rel="preload" href={interUrl} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={garamond600Url} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={garamond500Url} as="font" type="font/woff2" crossorigin />
+
+    <!-- Ícones: monograma GW (SVG, PNG 32px e ícone da Apple 180px com fundo nude). Gerados por scripts/gerar-icones.mjs. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Prévia para compartilhamento (WhatsApp, Instagram, etc.): imagem 1200x630 gerada por scripts/gerar-og.mjs. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={titulo} />
+    <meta property="og:description" content={descricao} />
+    <meta property="og:image" content={IMAGEM_OG} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Monograma GW, Método NaLift: Cuidar, sustentar e rejuvenescer, sem deixar de ser você." />
+    <meta property="og:url" content={SITE_URL} />
+    <meta property="og:locale" content="pt_BR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={titulo} />
+    <meta name="twitter:description" content={descricao} />
+    <meta name="twitter:image" content={IMAGEM_OG} />
+
+    <!-- Conteúdo visível por padrão. A classe "js" liga as animações de entrada; se o script
+         principal não carregar em 4 s, "js-sem-script" desfaz o estado invisível. -->
+    <script is:inline>
+      (function () {
+        var h = document.documentElement;
+        h.classList.add('js');
+        setTimeout(function () {
+          if (!h.classList.contains('js-ok')) h.classList.add('js-sem-script');
+        }, 4000);
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+    <script>
+      import '../scripts/revelar.js';
+    </script>
+  </body>
+</html>

@@ -1,0 +1,82 @@
+---
+// Botão flutuante do WhatsApp (só celular e tablet; no PC fica escondido). Mesmo link e mesma mensagem pronta do botão
+// da seção 8. Aparece com fade só depois que a pessoa passa da Abertura e some quando a seção 8 (Contato) ou o
+// rodapé estão na tela (para não duplicar o botão de lá nem cobrir o rodapé). Quem liga e desliga é src/scripts/botao-whatsapp.js.
+// Sem JavaScript fica escondido (a seção 8 tem o botão principal).
+import IconeWhatsapp from './IconeWhatsapp.astro';
+import { contato } from '../content/contato';
+---
+
+<a class="zap" href={contato.contato.whatsapp.href} target="_blank" rel="noopener noreferrer" aria-label={contato.contato.whatsapp.rotulo}>
+  <IconeWhatsapp tamanho={30} />
+</a>
+
+<script>
+  import '../scripts/botao-whatsapp.js';
+</script>
+
+<style>
+  /* Redondo, bordô, 60px (área de toque ≥ 56px), canto inferior direito, respeitando a área segura do iPhone. */
+  .zap {
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem));
+    z-index: 45;
+    display: grid;
+    place-items: center;
+    width: 60px;
+    height: 60px;
+    background: var(--cor-primaria);
+    border-radius: 50%;
+    box-shadow: 0 10px 26px color-mix(in srgb, var(--cor-texto) 30%, transparent);
+    color: var(--cor-sobre-primaria);
+    opacity: 0;
+    pointer-events: none;
+    text-decoration: none;
+    transform: translateY(10px);
+    visibility: hidden;
+  }
+
+  .zap:global(.zap--visivel) {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    visibility: visible;
+  }
+
+  .zap:focus-visible {
+    outline: 3px solid var(--cor-primaria);
+    outline-offset: 4px;
+  }
+
+  @media (hover: hover) {
+    .zap:hover {
+      background: var(--cor-secundaria);
+    }
+  }
+
+  .zap:active {
+    transform: scale(0.95);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .zap {
+      transition:
+        opacity 350ms ease,
+        transform 350ms ease,
+        background-color 250ms ease,
+        visibility 0s linear 350ms;
+    }
+
+    .zap:global(.zap--visivel) {
+      transition-delay: 0s;
+    }
+  }
+
+  /* Só celular e tablet: no PC, o menu do topo e o botão da seção 8 bastam. */
+  @media (min-width: 64rem) {
+    .zap {
+      display: none;
+    }
+  }
+</style>

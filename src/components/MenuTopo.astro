@@ -1,0 +1,153 @@
+---
+// Menu de atalhos no topo: 4 atalhos (Método, Resultados, Dúvidas, Contato) numa barra fina, nude translúcida com
+// desfoque. Aparece só depois da Abertura; some ao rolar para baixo e reaparece ao rolar para cima; destaca em bordô
+// a seção atual; tocar rola suavemente (CSS `scroll-behavior: smooth`, rolagem nativa). Lógica: src/scripts/menu-topo.js.
+// Sem JavaScript fica escondido (a página inteira continua navegável pela rolagem).
+// "grupo": seções que contam como aquele atalho (Depoimentos e Sobre ficam em "Resultados", que é a prova).
+// "centro": o bloco que é centralizado na tela ao tocar (o miolo da seção, sem o respiro e a emenda de cor). "Contato" leva
+// ao bloco "Vamos cuidar de você?" (#agendar), e não ao início da seção, que é o consultório.
+const itens = [
+  { rotulo: 'Método', alvo: 'metodo', centro: '#metodo .secao__miolo', grupo: ['metodo'] },
+  { rotulo: 'Resultados', alvo: 'resultados', centro: '#resultados .secao__miolo', grupo: ['resultados', 'depoimentos', 'sobre'] },
+  { rotulo: 'Dúvidas', alvo: 'duvidas', centro: '#duvidas .secao__miolo', grupo: ['duvidas'] },
+  { rotulo: 'Contato', alvo: 'agendar', centro: '#agendar', grupo: ['contato'] },
+];
+---
+
+<nav class="menu" aria-label="Atalhos das seções">
+  <ul class="menu__lista">
+    {
+      itens.map((item) => (
+        <li>
+          <a class="menu__link" href={`#${item.alvo}`} data-centro={item.centro} data-grupo={item.grupo.join(' ')}>
+            {item.rotulo}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<script>
+  import '../scripts/menu-topo.js';
+</script>
+
+<style>
+  .menu {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 50;
+    padding-top: env(safe-area-inset-top);
+    background: color-mix(in srgb, var(--cor-fundo) 82%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--cor-primaria) 10%, transparent);
+    opacity: 0;
+    transform: translateY(-100%);
+    visibility: hidden;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .menu:global(.menu--visivel) {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+  }
+
+  /* Os 4 atalhos cabem numa linha em qualquer celular (320px em diante), sem rolagem horizontal: o texto encolhe um
+     pouco nas telas bem estreitas (de 16px para no mínimo 14px) e o espaço sobra entre eles. */
+  .menu__lista {
+    display: flex;
+    justify-content: space-between;
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 0 0.25rem;
+    list-style: none;
+  }
+
+  .menu__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 0.7rem;
+    color: var(--cor-texto);
+    font-size: clamp(0.875rem, 4.2vw, 1rem);
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  /* Linha fina embaixo do atalho atual. */
+  .menu__link::after {
+    position: absolute;
+    right: 0.7rem;
+    bottom: 7px;
+    left: 0.7rem;
+    height: 2px;
+    background: var(--cor-primaria);
+    border-radius: 2px;
+    content: '';
+    transform: scaleX(0);
+    transform-origin: center;
+  }
+
+  .menu__link[aria-current='true'] {
+    color: var(--cor-primaria);
+    font-weight: 600;
+  }
+
+  .menu__link[aria-current='true']::after {
+    transform: scaleX(1);
+  }
+
+  .menu__link:focus-visible {
+    outline: 3px solid var(--cor-primaria);
+    outline-offset: -4px;
+  }
+
+  @media (hover: hover) {
+    .menu__link:hover {
+      color: var(--cor-primaria);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .menu {
+      transition:
+        transform 300ms ease,
+        opacity 300ms ease,
+        visibility 0s linear 300ms;
+    }
+
+    .menu:global(.menu--visivel) {
+      transition-delay: 0s;
+    }
+
+    .menu__link {
+      transition: color 200ms ease;
+    }
+
+    .menu__link::after {
+      transition: transform 250ms ease;
+    }
+  }
+
+  /* PC: o mesmo menu, centralizado, com mais espaço entre os atalhos. */
+  @media (min-width: 64rem) {
+    .menu__lista {
+      justify-content: center;
+      gap: 2.5rem;
+      max-width: none;
+    }
+
+    .menu__link {
+      padding: 0 0.5rem;
+    }
+
+    .menu__link::after {
+      right: 0.5rem;
+      left: 0.5rem;
+    }
+  }
+</style>

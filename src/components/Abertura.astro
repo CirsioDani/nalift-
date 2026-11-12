@@ -1,0 +1,584 @@
+---
+// Seção 1: Abertura. Texto base em conteudo.md.
+// O logo é o próprio public/midia/logo/logo-gw.svg, embutido na página (inline) para o CSS poder
+// animar o traço. Lemos o arquivo na hora do build, então o desenho continua vindo de uma fonte só.
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+const svg = readFileSync(join(process.cwd(), 'public/midia/logo/logo-gw.svg'), 'utf8');
+const transformacao = svg.match(/<g transform="([^"]+)"/)?.[1] ?? '';
+const contorno = (svg.match(/<path d="([^"]+)"/)?.[1] ?? '').replace(/\s+/g, ' ').trim();
+
+const palavras = 'Cuidar, sustentar e rejuvenescer.'.split(' ');
+
+// Fitas de seda do fundo: imagens WebP transparentes e já desfocadas (geradas por scripts/gerar-fitas.mjs),
+// então a página só anima transform e opacity (nada de filtro de blur em tempo real). Celular (retrato): 2 fitas;
+// PC (paisagem): 3. dx/dy: de onde cada fita desliza ao entrar; onda/fase: ciclo e defasagem da flutuação.
+const fitas = [
+  { n: 1, atraso: 0.1, dx: -26, dy: -18, onda: 17, fase: 0 },
+  { n: 2, atraso: 0.25, dx: 24, dy: -14, onda: 19.5, fase: -7 },
+  { n: 3, atraso: 0.4, dx: -20, dy: 22, onda: 15.5, fase: -3 },
+];
+---
+
+<section class="abertura" id="abertura" aria-labelledby="abertura-titulo">
+  <!-- Fitas decorativas, atrás de todo o conteúdo. Sem JavaScript ou com movimento reduzido: prontas e paradas. -->
+  <div class="abertura__fitas" aria-hidden="true">
+    {
+      fitas.map((f) => (
+        <div
+          class={`fita fita--${f.n}`}
+          style={`--atraso: ${f.atraso}s; --dx: ${f.dx}px; --dy: ${f.dy}px; --onda: ${f.onda}s; --fase: ${f.fase}s`}
+        >
+          {f.n < 3 ? (
+            <picture>
+              <source media="(orientation: landscape)" srcset={`/midia/fitas/paisagem-${f.n}.webp`} />
+              <img src={`/midia/fitas/retrato-${f.n}.webp`} alt="" width="400" height="800" decoding="async" fetchpriority="low" />
+            </picture>
+          ) : (
+            <img src="/midia/fitas/paisagem-3.webp" alt="" width="1000" height="625" loading="lazy" decoding="async" />
+          )}
+        </div>
+      ))
+    }
+  </div>
+
+  <!-- Topo da Abertura: a seda se dissolve no nude do <html>/<body>, então puxar a página para baixo (efeito elástico)
+       não revela corte nenhum. -->
+  <div class="abertura__topo" aria-hidden="true"></div>
+
+  <div class="abertura__centro">
+    <svg
+      class="abertura__logo"
+      viewBox="0 0 1328 1008"
+      width="1328"
+      height="1008"
+      role="img"
+      aria-label="Logo GW, Gabriela Nalin"
+    >
+      <defs>
+        <!-- Reflexo de luz: faixa clara que atravessa o monograma uma única vez, recortada pela forma do logo -->
+        <linearGradient id="abertura-brilho-grad" x1="0" y1="0" x2="1" y2="0">
+          <stop class="abertura__brilho-borda" offset="0"></stop>
+          <stop class="abertura__brilho-meio" offset="0.5"></stop>
+          <stop class="abertura__brilho-borda" offset="1"></stop>
+        </linearGradient>
+        <mask id="abertura-brilho-mascara" maskUnits="userSpaceOnUse" x="0" y="0" width="1328" height="1008">
+          <g transform={transformacao}>
+            <path class="abertura__logo-mascara" d={contorno}></path>
+          </g>
+        </mask>
+      </defs>
+      <g transform={transformacao}>
+        <path class="abertura__logo-forma" pathLength="1" d={contorno}></path>
+      </g>
+      <g mask="url(#abertura-brilho-mascara)">
+        <rect class="abertura__logo-brilho" x="0" y="-60" width="300" height="1128" fill="url(#abertura-brilho-grad)"
+        ></rect>
+      </g>
+    </svg>
+    <p class="abertura__eyebrow">Método NaLift</p>
+    <h1 class="abertura__titulo" id="abertura-titulo">
+      {
+        palavras.map((palavra, i) => (
+          <>
+            <span class="abertura__palavra">
+              <span style={`--i: ${i}`}>{palavra}</span>
+            </span>
+            {i < palavras.length - 1 ? ' ' : ''}
+          </>
+        ))
+      }
+    </h1>
+    <p class="abertura__sub">Sem deixar de ser você.</p>
+  </div>
+
+  <a class="abertura__rolar" href="#sensacao">
+    <span>Role para descobrir</span>
+    <span class="abertura__seta" aria-hidden="true"></span>
+  </a>
+</section>
+
+<script>
+  import '../scripts/abertura.js';
+</script>
+
+<style>
+  /* Tudo visível e estático por padrão. As animações só existem com a classe .js no <html>
+     (adicionada pelo script do Base.astro) e sem prefers-reduced-motion.
+     Linha do tempo (termina em ~2,9 s): logo é traçado 0,1 a 1,6 s e preenchido até 2,0 s; as palavras do
+     título sobem a partir de 1,3 s (uma a cada 0,1 s); rótulo, subtítulo e "role" entram depois, com fade;
+     o reflexo atravessa o logo de 2,0 a 2,9 s. O fundo "respira" em loop, só com transform e opacity. */
+  .abertura {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* reserva para navegadores sem svh */
+    min-height: 100svh;
+    padding: 2rem var(--gutter) 1rem;
+    overflow: clip; /* o brilho de fundo pode passar da seção sem criar rolagem */
+    background: var(--cor-fundo);
+    text-align: center;
+  }
+
+  /* Brilho rosé atrás do logo (antes era o background da seção). */
+  .abertura::before {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse at 50% 38%,
+      color-mix(in srgb, var(--cor-destaque) 55%, transparent) 0%,
+      transparent 65%
+    );
+    content: '';
+    pointer-events: none;
+  }
+
+  /* Fitas de seda: atrás de todo o conteúdo e sem receber toque. As imagens preenchem a seção sem distorcer
+     (cover); celular e PC usam desenhos diferentes (orientação da tela). */
+  .abertura__fitas {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* A imagem ultrapassa a Abertura por todos os lados (4rem), mais que o deslocamento máximo da flutuação e da
+     entrada: a borda da imagem nunca aparece. Como a imagem usa cover, ela sempre cobre este contêiner maior. */
+  .fita {
+    position: absolute;
+    inset: -4rem;
+  }
+
+  .fita img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* A 3ª fita só existe no PC (no celular, o <img> preguiçoso nem chega a baixar). */
+  .fita--3 {
+    display: none;
+  }
+
+  @media (orientation: landscape) {
+    .fita--3 {
+      display: block;
+    }
+  }
+
+  /* Emenda com a seção 2: na parte de baixo da Abertura, a seda vai se dissolvendo até sumir por completo, e o
+     fundo termina exatamente na cor do topo da seção 2 (que começa em --cor-fundo, veja .secao:nth-of-type(even)
+     no global.css). Resultado: nenhuma linha, degrau de cor ou corte na emenda. Também clareia a região do "Role
+     para descobrir". É uma camada parada (sem custo de animação); a máscara usa só o canal alfa. */
+  .abertura::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 38%;
+    background: var(--cor-fundo);
+    content: '';
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgb(0 0 0 / 0.1) 20%,
+      rgb(0 0 0 / 0.35) 40%,
+      rgb(0 0 0 / 0.7) 60%,
+      rgb(0 0 0 / 0.93) 80%,
+      #000 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgb(0 0 0 / 0.1) 20%,
+      rgb(0 0 0 / 0.35) 40%,
+      rgb(0 0 0 / 0.7) 60%,
+      rgb(0 0 0 / 0.93) 80%,
+      #000 100%
+    );
+  }
+
+  @media (orientation: landscape) {
+    .abertura::after {
+      height: 44%;
+    }
+  }
+
+  /* Emenda do topo (puxão elástico do trackpad/celular): acima da Abertura só existe o fundo do <html>/<body>, que é
+     o nude (--cor-fundo). Se a seda terminasse seca na borda, o puxão mostraria uma faixa lisa e um corte. Por isso
+     a seda se dissolve até o nude nos primeiros pixels: nos dois lados da borda a cor é a mesma, sem linha. Camada
+     parada (sem custo de animação), máscara só de alfa, como a do rodapé da Abertura. */
+  .abertura__topo {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: clamp(5rem, 16svh, 9rem);
+    background: var(--cor-fundo);
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      rgb(0 0 0 / 0.93) 20%,
+      rgb(0 0 0 / 0.7) 40%,
+      rgb(0 0 0 / 0.35) 60%,
+      rgb(0 0 0 / 0.1) 80%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      rgb(0 0 0 / 0.93) 20%,
+      rgb(0 0 0 / 0.7) 40%,
+      rgb(0 0 0 / 0.35) 60%,
+      rgb(0 0 0 / 0.1) 80%,
+      transparent 100%
+    );
+  }
+
+  .abertura__centro,
+  .abertura__rolar {
+    position: relative;
+    z-index: 1;
+  }
+
+  .abertura__centro {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+
+  .abertura__logo {
+    display: block;
+    width: clamp(8rem, 38vw, 11rem);
+    height: auto;
+    margin-bottom: clamp(1.75rem, 6vh, 3rem);
+    overflow: visible;
+  }
+
+  /* Estado final (e o que aparece sem JavaScript ou com prefers-reduced-motion): logo pronto. */
+  .abertura__logo-forma {
+    fill: var(--cor-logo);
+    stroke: none;
+  }
+
+  .abertura__logo-mascara {
+    fill: var(--cor-sobre-primaria); /* branco = a luz só aparece onde há logo */
+    stroke: none;
+  }
+
+  .abertura__brilho-borda {
+    stop-color: var(--cor-sobre-primaria);
+    stop-opacity: 0;
+  }
+
+  .abertura__brilho-meio {
+    stop-color: var(--cor-sobre-primaria);
+    stop-opacity: 0.8;
+  }
+
+  /* Parado fora do logo: sem animação, o reflexo fica fora do desenho (não aparece). */
+  .abertura__logo-brilho {
+    transform: translateX(-520px) skewX(-20deg);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* Mesmo estilo do rótulo do topo da página /estilo. */
+  .abertura__eyebrow {
+    margin: 0 0 1rem;
+    color: var(--cor-secundaria);
+    font-size: 0.875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .abertura__titulo {
+    margin: 0 0 1rem;
+    font-weight: 600;
+  }
+
+  /* Cada palavra tem uma "máscara" (overflow: hidden); a palavra sobe de dentro dela.
+     O respiro embaixo evita cortar as hastes de letras como g, j e p. */
+  .abertura__palavra {
+    display: inline-block;
+    padding-bottom: 0.2em;
+    margin-bottom: -0.2em;
+    overflow: hidden;
+    vertical-align: top;
+  }
+
+  .abertura__palavra > span {
+    display: inline-block;
+  }
+
+  .abertura__sub {
+    margin: 0;
+    color: var(--cor-secundaria);
+    font-family: var(--fonte-titulo);
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    font-weight: 500;
+    line-height: 1.25;
+  }
+
+  .abertura__rolar {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+    color: var(--cor-secundaria);
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+  }
+
+  .abertura__rolar:hover {
+    color: var(--cor-primaria);
+  }
+
+  .abertura__seta {
+    display: block;
+    width: 0.7rem;
+    height: 0.7rem;
+    border-right: 2px solid currentcolor;
+    border-bottom: 2px solid currentcolor;
+    transform: rotate(45deg);
+  }
+
+  @media (min-width: 64rem) {
+    .abertura__logo {
+      width: 13rem;
+    }
+  }
+
+  /* Telas grandes (a partir de 1600px, por exemplo 1920x1080): logo, título e subtítulo crescem para não ficarem
+     pequenos no meio de tanto espaço. O título continua em 2 linhas. */
+  @media (min-width: 100rem) {
+    .abertura__logo {
+      width: 16rem;
+      margin-bottom: 3.5rem;
+    }
+
+    .abertura__centro {
+      max-width: 56rem;
+    }
+
+    .abertura__eyebrow {
+      margin-bottom: 1.25rem;
+      font-size: 1.0625rem;
+    }
+
+    .abertura__titulo {
+      font-size: 5.5rem;
+    }
+
+    .abertura__sub {
+      font-size: 2.5rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Logo "desenhado" uma única vez: primeiro o contorno é traçado, em seguida o preenchimento aparece
+       com fade enquanto o traço some, para o resultado final ser igual ao logo original. Sem loop. */
+    :global(.js) .abertura__logo-forma {
+      animation:
+        logo-tracar 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both,
+        logo-preencher 0.4s ease-out 1.6s both;
+      stroke: var(--cor-logo);
+      stroke-dasharray: 1;
+      stroke-linecap: butt;
+      stroke-linejoin: round;
+      stroke-width: 100; /* unidades do desenho original (~1,5 px na tela) */
+    }
+
+    /* Fitas: surgem com fade e um leve deslizar, junto com o desenho do logo (mesma curva e mesma ordem de
+       grandeza de tempo). A imagem entra; o contêiner (.fita) cuida da flutuação, para as duas animações
+       de transform não brigarem no mesmo elemento. */
+    :global(.js) .fita img {
+      animation: fita-entrar 1.8s cubic-bezier(0.4, 0, 0.2, 1) var(--atraso) backwards;
+    }
+
+    /* Depois, flutuam muito devagar (ciclo de 15 a 20 s), só transform e opacity; cada fita com fase própria. */
+    :global(.js) .fita {
+      animation: fita-flutuar-a var(--onda) ease-in-out var(--fase) infinite;
+      will-change: transform, opacity;
+    }
+
+    :global(.js) .fita--2 {
+      animation-name: fita-flutuar-b;
+    }
+
+    :global(.js) .fita--3 {
+      animation-name: fita-flutuar-c;
+    }
+
+    /* Reflexo de luz: uma única passada, logo depois do preenchimento. */
+    :global(.js) .abertura__logo-brilho {
+      animation: logo-brilho 0.9s ease-in-out 2s both;
+    }
+
+    /* Fundo respirando: ciclo de 10 s, bem sutil, só transform e opacity. */
+    :global(.js) .abertura::before {
+      animation: respirar 10s ease-in-out infinite;
+      will-change: transform, opacity;
+    }
+
+    /* Título palavra por palavra, começando quando o logo está quase todo desenhado. */
+    :global(.js) .abertura__palavra > span {
+      animation: subir-palavra 0.7s cubic-bezier(0.2, 0.75, 0.2, 1) calc(1.3s + var(--i) * 0.1s) backwards;
+    }
+
+    /* Rótulo, subtítulo e "role" entram logo depois, com fade. */
+    :global(.js) .abertura__eyebrow {
+      animation: aparecer 0.5s ease-out 1.95s backwards;
+    }
+
+    :global(.js) .abertura__sub {
+      animation: aparecer 0.55s ease-out 2.1s backwards;
+    }
+
+    :global(.js) .abertura__rolar {
+      animation: aparecer 0.5s ease-out 2.35s backwards;
+    }
+
+    :global(.js) .abertura__seta {
+      animation: descer 2.2s ease-in-out 2.9s infinite;
+    }
+
+    /* Fora da tela, o script marca a seção e os loops pausam. */
+    :global(.js) .abertura--fora::before,
+    :global(.js) .abertura--fora .abertura__seta,
+    :global(.js) .abertura--fora .fita {
+      animation-play-state: paused;
+    }
+  }
+
+  @keyframes aparecer {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  @keyframes subir-palavra {
+    from {
+      transform: translateY(110%);
+    }
+  }
+
+  @keyframes respirar {
+    0%,
+    100% {
+      opacity: 0.8;
+      transform: translate3d(-1.5%, 1%, 0) scale(1);
+    }
+
+    50% {
+      opacity: 1;
+      transform: translate3d(1.5%, -1.5%, 0) scale(1.07);
+    }
+  }
+
+  @keyframes logo-brilho {
+    from {
+      transform: translateX(-520px) skewX(-20deg);
+    }
+
+    to {
+      transform: translateX(1850px) skewX(-20deg);
+    }
+  }
+
+  @keyframes logo-tracar {
+    from {
+      stroke-dashoffset: 1;
+    }
+
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes logo-preencher {
+    from {
+      fill-opacity: 0;
+      stroke-opacity: 1;
+    }
+
+    to {
+      fill-opacity: 1;
+      stroke-opacity: 0;
+    }
+  }
+
+  @keyframes fita-entrar {
+    from {
+      opacity: 0;
+      transform: translate3d(var(--dx), var(--dy), 0);
+    }
+  }
+
+  @keyframes fita-flutuar-a {
+    0%,
+    100% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+
+    50% {
+      opacity: 0.8;
+      transform: translate3d(-14px, 20px, 0) rotate(0.7deg);
+    }
+  }
+
+  @keyframes fita-flutuar-b {
+    0%,
+    100% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+
+    50% {
+      opacity: 0.82;
+      transform: translate3d(16px, -14px, 0) rotate(-0.6deg);
+    }
+  }
+
+  @keyframes fita-flutuar-c {
+    0%,
+    100% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+
+    50% {
+      opacity: 0.8;
+      transform: translate3d(-12px, -18px, 0) rotate(0.5deg);
+    }
+  }
+
+  @keyframes descer {
+    0%,
+    100% {
+      opacity: 0.5;
+      transform: translateY(0) rotate(45deg);
+    }
+
+    50% {
+      opacity: 1;
+      transform: translateY(6px) rotate(45deg);
+    }
+  }
+</style>

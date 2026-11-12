@@ -1,0 +1,35 @@
+# Dependências e arquivos gerados
+node_modules/
+dist/
+.astro/
+.wrangler/
+# Gerado a cada build por scripts/gerar-rotas.mjs (lista os caminhos dos vídeos)
+public/_routes.json
+
+# Mídia dos clientes (fotos e vídeos de antes e depois, depoimentos, consultório): NÃO pode ficar pública.
+# Ficam de fora só as pastas de mídia de clientes; o logo e as fitas de seda (arte da marca e do fundo, sem pessoas) entram
+# no repositório porque o build lê o logo (Abertura e fechamento) e a Abertura usa as fitas.
+public/midia/*
+!public/midia/logo/
+!public/midia/fitas/
+
+# Páginas de trabalho/teste (continuam no site, mas não vão para o repositório)
+src/pages/teste-titulo.astro
+src/pages/estilo.astro
+src/components/KitEstilo.astro
+
+# Material de trabalho e anotações internas
+docs-midia/
+referencias/
+redirect-antigo/
+CLAUDE.md
+conteudo.md
+.claude/
+
+# Ambiente e sistema
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+desktop.ini

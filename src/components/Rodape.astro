@@ -1,0 +1,77 @@
+---
+// Rodapé do site: assinatura pequena e discreta, com link para o site atual da marca. Textos em src/content/contato.ts.
+// Fica depois da última seção (que termina em nude, a mesma cor do rodapé: sem linha na emenda).
+import { contato } from '../content/contato';
+
+const r = contato.rodape;
+---
+
+<footer class="rodape">
+  <div class="rodape__miolo">
+  <p class="rodape__texto">
+    {
+      r.partes.map((parte, i) => (
+        <>
+          {i > 0 ? ' · ' : ''}
+          <span class="rodape__parte">{parte}</span>
+        </>
+      ))
+    }
+  </p>
+  <p class="rodape__texto"><a class="rodape__link" href={r.link.href} target="_blank" rel="noopener noreferrer">{r.link.rotulo}</a></p>
+  </div>
+</footer>
+
+<style>
+  .rodape {
+    /* No celular e no tablet, margem no fim da página (e área segura do iPhone) para o botão flutuante do WhatsApp
+       nunca cobrir o rodapé. */
+    padding: 1.5rem var(--gutter) calc(5.5rem + env(safe-area-inset-bottom));
+    text-align: center;
+  }
+
+  @media (min-width: 64rem) {
+    .rodape {
+      padding-bottom: 3rem;
+    }
+  }
+
+  /* Linha fina (não vai de ponta a ponta: fica centralizada, como o fim de uma revista) separando o fechamento. */
+  .rodape__miolo {
+    max-width: 34rem;
+    margin-inline: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--cor-primaria) 22%, transparent);
+  }
+
+  /* Letras pequenas, cor suave (texto da paleta a 74% sobre o nude: contraste ~5,3:1, AA). */
+  .rodape__texto {
+    margin: 0 0 0.35rem;
+    color: color-mix(in srgb, var(--cor-texto) 74%, var(--cor-fundo));
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+  }
+
+  /* Cada parte fica inteira; se não couber numa linha, quebra entre elas (no ponto do meio), nunca no hífen. */
+  .rodape__parte {
+    white-space: nowrap;
+  }
+
+  .rodape__link {
+    padding-block: 0.6rem; /* área de toque */
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
+
+  .rodape__link:hover {
+    color: var(--cor-secundaria);
+  }
+
+  .rodape__link:focus-visible {
+    outline: 3px solid var(--cor-primaria);
+    outline-offset: 3px;
+  }
+</style>

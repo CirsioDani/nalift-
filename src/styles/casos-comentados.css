@@ -1,0 +1,449 @@
+/* Seção 5, parte 2: "Veja de perto" (botão "Ver mais" + gaveta/janela com 3 vídeos).
+   Sem JavaScript: o link leva à lista de vídeos que fica na página. Com JavaScript (casos-comentados.js),
+   o bloco .casos__conteudo vai para dentro do <dialog>. Cores só pelas variáveis da paleta. */
+
+.casos {
+  margin-top: 1.75rem;
+  text-align: center;
+}
+
+/* Botão secundário: só contorno, em bordô. */
+.casos__botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 11rem;
+  min-height: 48px;
+  padding: 0 2rem;
+  background: transparent;
+  border: 1.5px solid var(--cor-primaria);
+  border-radius: 999px;
+  color: var(--cor-primaria);
+  cursor: pointer;
+  font-family: var(--fonte-texto);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.casos__botao:active {
+  background: var(--cor-fundo-alt);
+}
+
+@media (hover: hover) {
+  .casos__botao:hover {
+    background: var(--cor-fundo-alt);
+  }
+}
+
+.casos__botao--abrir {
+  display: none;
+}
+
+.casos--ativo .casos__botao--abrir {
+  display: inline-flex;
+}
+
+.casos--ativo .casos__botao--link {
+  display: none;
+}
+
+/* ---- Vídeos na página (sem JavaScript): em sequência, inteiros (9:16), com os controles do navegador ---- */
+.casos__conteudo {
+  margin-top: 2.5rem;
+  scroll-margin-top: 1.5rem;
+}
+
+.casos__titulo {
+  margin: 0 0 1.5rem;
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  text-align: center;
+}
+
+.casos__lista {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 14rem));
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.casos__figura {
+  margin: 0;
+}
+
+.casos__quadro {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 9 / 16;
+  background: var(--cor-fundo-alt);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-suave);
+}
+
+.casos__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.casos__legenda {
+  margin-top: 0.625rem;
+  color: var(--cor-secundaria);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* ---- Gaveta / janela (<dialog>) ----
+   O próprio <dialog> ocupa a tela inteira e é transparente; a camada nude translúcida é o ::before dele
+   (assim usa as variáveis da paleta em qualquer navegador) e o painel é a gaveta. */
+html.casos-aberto {
+  overflow: hidden; /* a página de trás não rola */
+}
+
+.casos__dialogo {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  color: var(--cor-texto);
+  overscroll-behavior: contain;
+}
+
+.casos__dialogo::backdrop {
+  background: transparent;
+}
+
+.casos__dialogo::before {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--cor-texto) 42%, var(--cor-fundo-alt));
+  content: '';
+  opacity: 0;
+}
+
+.casos__dialogo.aberto::before {
+  /* --arraste (0 a 1): enquanto a gaveta é puxada para baixo, o fundo clareia junto. */
+  opacity: calc(0.8 * (1 - var(--arraste, 0)));
+}
+
+.casos__painel:focus {
+  outline: none;
+}
+
+/* Durante o arraste, o fundo acompanha o dedo sem atraso. */
+.casos__dialogo[style*='--arraste']::before {
+  transition: none;
+}
+
+/* Celular: gaveta que sobe de baixo, ~90% da altura, cantos arredondados em cima. */
+.casos__painel {
+  --casos-alt: min(90vh, 52rem);
+
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  height: var(--casos-alt);
+  padding: 2.25rem 0 max(0.75rem, env(safe-area-inset-bottom));
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--cor-fundo);
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -8px 24px color-mix(in srgb, var(--cor-texto) 18%, transparent); /* sombra leve: blur grande em camada enorme custa caro de rasterizar */
+  opacity: 0.01; /* não 0: com 0 o navegador nem rasteriza a camada, e ela "estoura" nos primeiros quadros da entrada */
+  overscroll-behavior: contain;
+  transform: translateY(28px);
+}
+
+@supports (height: 1dvh) {
+  .casos__painel {
+    --casos-alt: min(90dvh, 52rem);
+  }
+}
+
+.casos__dialogo.aberto .casos__painel {
+  opacity: 1;
+  transform: none;
+}
+
+/* Puxador visual no topo. */
+.casos__painel::before {
+  position: absolute;
+  top: 0.625rem;
+  left: 50%;
+  width: 2.5rem;
+  height: 4px;
+  margin-left: -1.25rem;
+  background: var(--cor-destaque);
+  border-radius: 999px;
+  content: '';
+}
+
+/* Alça de arrastar (celular): cobre o puxador, o título e a linha de apoio; o X fica por cima. */
+.casos__alca {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: 6rem;
+  touch-action: none;
+}
+
+/* X discreto: sem contorno, só um círculo bege suave com o X em bordô. */
+.casos__fechar {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: var(--cor-fundo-alt);
+  border: 0;
+  border-radius: 50%;
+  color: var(--cor-primaria);
+  cursor: pointer;
+}
+
+.casos__painel .casos__conteudo {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
+}
+
+.casos__painel .casos__titulo {
+  flex: none;
+  margin: 0 0 0.5rem;
+  padding-inline: 3.5rem;
+}
+
+/* Palco: a faixa de vídeos + as setas nas laterais. */
+.casos__palco {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Setas anterior/próximo: mesmo estilo das do carrossel de depoimentos (bordô sobre nude), 44px. Ficam coladas
+   nas laterais do vídeo (a largura do vídeo é 9/16 da altura) e nunca encostam na borda da gaveta. */
+.casos__seta {
+  position: absolute;
+  top: calc(50% - 1rem); /* centro do vídeo (a legenda ocupa ~2rem embaixo) */
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  padding: 0;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-destaque);
+  border-radius: 50%;
+  color: var(--cor-primaria);
+  cursor: pointer;
+}
+
+.casos__seta--anterior {
+  left: max(0.5rem, calc(50% - var(--casos-quadro-alt) * 9 / 32 - 3.5rem));
+}
+
+.casos__seta--proximo {
+  right: max(0.5rem, calc(50% - var(--casos-quadro-alt) * 9 / 32 - 3.5rem));
+}
+
+@media (hover: hover) {
+  .casos__seta:hover:not(:disabled) {
+    background: var(--cor-fundo-alt);
+    border-color: var(--cor-secundaria);
+  }
+}
+
+.casos__seta:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.casos__seta:focus-visible {
+  outline: 3px solid var(--cor-primaria);
+  outline-offset: 2px;
+}
+
+/* Os 3 vídeos: um por vez, deslizando para o lado com scroll-snap. */
+.casos__painel .casos__lista {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-start; /* anula o center da lista sem JavaScript: centralizar um conteúdo mais largo empurraria o 1º slide para fora, à esquerda */
+  gap: 0;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.casos__painel .casos__lista::-webkit-scrollbar {
+  display: none;
+}
+
+.casos__painel .casos__item {
+  display: flex;
+  flex: 0 0 100%;
+  justify-content: center;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+
+.casos__painel .casos__figura {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+}
+
+/* Legendas mais longas: respiro nas laterais e quebra equilibrada, sem encostar na borda da gaveta. */
+.casos__painel .casos__legenda {
+  max-width: 100%;
+  padding-inline: 1.25rem;
+  text-wrap: balance;
+}
+
+/* Vídeo inteiro (9:16, sem corte): a altura sai do espaço que sobra na gaveta, a largura segue a proporção. */
+.casos__painel {
+  --casos-quadro-alt: max(calc(var(--casos-alt) - 12.5rem), 14rem);
+}
+
+.casos__painel .casos__quadro {
+  width: auto;
+  height: var(--casos-quadro-alt);
+}
+
+.casos__pontos {
+  display: flex;
+  flex: none;
+  justify-content: center;
+}
+
+.casos__ponto {
+  position: relative;
+  width: 28px;
+  height: 44px;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.casos__ponto::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: var(--cor-destaque);
+  border-radius: 999px;
+  content: '';
+  transform: translate(-50%, -50%);
+}
+
+.casos__ponto.ativo::before {
+  width: 24px;
+  background: var(--cor-primaria);
+}
+
+.casos__fechar:focus-visible,
+.casos__ponto:focus-visible {
+  outline: 3px solid var(--cor-primaria);
+  outline-offset: 2px;
+}
+
+/* PC: janela centralizada. */
+@media (min-width: 48rem) {
+  .casos__painel {
+    --casos-alt: min(90vh, 46rem);
+
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    width: min(30rem, calc(100% - 4rem));
+    padding-top: 2.75rem;
+    border-radius: 28px;
+    opacity: 0.01;
+    transform: translate(-50%, calc(-50% + 20px));
+  }
+
+  @supports (height: 1dvh) {
+    .casos__painel {
+      --casos-alt: min(90dvh, 46rem);
+    }
+  }
+
+  .casos__dialogo.aberto .casos__painel {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+
+  .casos__painel::before,
+  .casos__alca {
+    display: none;
+  }
+}
+
+/* Movimento da gaveta (decisão do usuário: a subida com deslize de 100% da altura ficava travada; trocada por algo
+   simples e suave). A gaveta aparece com fade e sobe só ~28px (no PC, ~20px), enquanto o fundo clareia. Tudo só
+   transform e opacity. O JS espera 2 quadros depois do showModal para começar (a gaveta já está na tela, quase
+   invisível, com a camada rasterizada), então a animação não gasta os primeiros quadros rasterizando. A saída é um
+   pouco mais curta; DURACAO no JS precisa ser maior que a maior transição de saída daqui (280ms). */
+@media (prefers-reduced-motion: no-preference) {
+  .casos__painel {
+    transition:
+      transform 280ms ease-in,
+      opacity 260ms ease-in;
+    will-change: transform, opacity;
+  }
+
+  .casos__dialogo.aberto .casos__painel {
+    transition:
+      transform 460ms var(--reveal-ease),
+      opacity 420ms ease-out;
+  }
+
+  .casos__dialogo::before {
+    transition: opacity 280ms ease-in;
+  }
+
+  .casos__dialogo.aberto::before {
+    transition: opacity 460ms ease-out;
+  }
+
+  .casos__ponto::before {
+    transition:
+      width 0.25s ease,
+      background-color 0.25s ease;
+  }
+}

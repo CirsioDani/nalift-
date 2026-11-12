@@ -1,0 +1,536 @@
+---
+// Seção 8: "Consultório e contato" (última seção). Textos em src/content/contato.ts.
+//  Parte 1, o consultório: vídeo ambiente (sem som, em loop, só toca quando está visível) + 2 fotos inteiras.
+//  Parte 2, contato: botões (WhatsApp e Instagram), cartão de informações escuro e o fechamento com o slogan.
+// Entrada ao rolar pelo sistema único (data-reveal); o fundo e a emenda vêm da regra global (seção par = bege).
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { contato } from '../content/contato';
+import IconeWhatsapp from './IconeWhatsapp.astro';
+import Seda from './Seda.astro';
+
+// O monograma do fechamento é o mesmo SVG da Abertura, embutido para o CSS poder "desenhar" o contorno (lido na hora do
+// build, então o desenho continua vindo de um arquivo só: public/midia/logo/logo-gw.svg).
+const svgLogo = readFileSync(join(process.cwd(), 'public/midia/logo/logo-gw.svg'), 'utf8');
+const logoTransformacao = svgLogo.match(/<g transform="([^"]+)"/)?.[1] ?? '';
+const logoContorno = (svgLogo.match(/<path d="([^"]+)"/)?.[1] ?? '').replace(/\s+/g, ' ').trim();
+
+const c = contato.consultorio;
+const k = contato.contato;
+const srcsetDe = (base: string) => `${base}-640.webp 640w, ${base}-1080.webp 1080w, ${base}-1600.webp 1600w`;
+---
+
+<section class="secao contato" id="contato" aria-labelledby="consultorio-titulo">
+  <div class="secao__miolo">
+    <!-- ===== Parte 1: o consultório ===== -->
+    <div class="consultorio" id="consultorio">
+      <h2 class="consultorio__titulo" id="consultorio-titulo" data-reveal="subir">{c.titulo}</h2>
+      <p class="consultorio__texto" data-reveal="subir">{c.texto}</p>
+
+      <div class="consultorio__grade">
+        <!-- Vídeo decorativo: muted, em loop e sem controles. O script só o toca enquanto está visível; com
+             prefers-reduced-motion mostra só o poster. Sem JavaScript, o poster aparece parado. -->
+        <div class="consultorio__quadro" data-reveal="zoom">
+          <video
+            class="consultorio__video"
+            data-ambiente
+            muted
+            loop
+            playsinline
+            preload="none"
+            poster={c.video.poster}
+            width={c.video.largura}
+            height={c.video.altura}
+            aria-label={c.video.rotulo}
+            tabindex="-1"
+          >
+            <source src={c.video.src} type="video/mp4" />
+          </video>
+        </div>
+
+        <!-- Celular: fileira que desliza (scroll-snap). PC: as 2 fotos empilhadas à direita do vídeo. -->
+        <ul class="consultorio__fotos" tabindex="0" aria-label="Fotos do consultório" data-reveal="escalonado" data-reveal-observar="filhos" data-reveal-limiar="0.01">
+          {
+            c.fotos.map((foto) => (
+              <li class="consultorio__foto">
+                <picture>
+                  <source type="image/webp" srcset={srcsetDe(foto.base)} sizes="(min-width: 64rem) 14rem, 72vw" />
+                  <img src={`${foto.base}-1080.jpg`} alt={foto.alt} width={foto.largura} height={foto.altura} loading="lazy" decoding="async" />
+                </picture>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===== Parte 2: contato ===== -->
+    <div class="agendar" id="agendar">
+      <h2 class="agendar__titulo" data-reveal="subir">{k.titulo}</h2>
+      <p class="agendar__texto" data-reveal="subir">{k.texto}</p>
+
+      <div class="agendar__botoes" data-reveal="escalonado">
+        <a class="botao botao--primario" href={k.whatsapp.href} target="_blank" rel="noopener noreferrer">
+          <IconeWhatsapp class="botao__icone" tamanho={26} />
+          <span>{k.whatsapp.rotulo}</span>
+        </a>
+        <a class="botao botao--secundario" href={k.instagram.href} target="_blank" rel="noopener noreferrer">
+          <svg class="botao__icone" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+            <rect x="3.5" y="3.5" width="17" height="17" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+            <circle cx="12" cy="12" r="3.9" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+            <circle cx="17.1" cy="6.9" r="1.1" fill="currentColor"></circle>
+          </svg>
+          <span>{k.instagram.rotulo}</span>
+        </a>
+      </div>
+
+      <!-- Cartão de informações: 2 colunas iguais ("Onde atendo" e "Horário"), alinhadas pelo topo. -->
+      <div class="cartao" data-reveal="zoom">
+        <div class="cartao__item">
+          <h3 class="cartao__rotulo">{k.cartao.onde.rotulo}</h3>
+          {
+            k.cartao.onde.locais.map((local) => (
+              <div class="cartao__local">
+                <p class="cartao__texto">{local.nome}</p>
+                <p class="cartao__detalhe">{local.endereco}</p>
+                {local.referencia ? <p class="cartao__referencia">{local.referencia}</p> : null}
+              </div>
+            ))
+          }
+        </div>
+        <div class="cartao__item">
+          <h3 class="cartao__rotulo">{k.cartao.horario.rotulo}</h3>
+          {k.cartao.horario.principais.map((linha) => <p class="cartao__texto">{linha}</p>)}
+          <p class="cartao__detalhe">{k.cartao.horario.detalhe}</p>
+        </div>
+      </div>
+
+      <!-- Fim da página, como o fim de uma revista: o slogan e o monograma GW pequeno, com bastante respiro, sobre
+           uma seda suave (a mesma da Abertura, girada: simetria com a capa). -->
+      <div class="agendar__fim">
+        <Seda variante="fecho" />
+        <p class="agendar__fecho" data-reveal="subir">{k.fechamento}</p>
+        <!-- Quando entra na tela (data-reveal="gatilho" marca .revelado), o contorno é traçado e depois o preenchimento
+             aparece, uma única vez (mesmo efeito da Abertura). Sem JavaScript ou com movimento reduzido: logo pronto. -->
+        <svg class="agendar__selo" viewBox="0 0 1328 1008" width={contato.selo.largura} height={contato.selo.altura} aria-hidden="true" focusable="false" data-reveal="gatilho">
+          <g transform={logoTransformacao}>
+            <path class="agendar__selo-forma" pathLength="1" d={logoContorno}></path>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import '../scripts/consultorio.js';
+</script>
+
+<style>
+  .consultorio__titulo,
+  .agendar__titulo {
+    text-align: center;
+  }
+
+  .consultorio__texto,
+  .agendar__texto {
+    max-width: 34rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  /* ===== Parte 1: o consultório ===== */
+  .consultorio__grade {
+    display: grid;
+    justify-items: center;
+    gap: 1.25rem;
+    margin-top: 2rem;
+    /* altura do vídeo (9:16): cabe numa tela de celular com folga */
+    --alt: clamp(20rem, calc(100vh - 14rem), 34rem);
+    --alt: clamp(20rem, calc(100svh - 14rem), 34rem);
+  }
+
+  .consultorio__quadro {
+    height: var(--alt);
+    overflow: hidden;
+    aspect-ratio: 9 / 16;
+    background: var(--cor-fundo-alt);
+    border-radius: 28px;
+    box-shadow: var(--sombra-suave);
+  }
+
+  .consultorio__video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Celular: fileira de fotos que desliza com scroll-snap, de ponta a ponta da tela (a próxima "espia" pela borda). */
+  .consultorio__fotos {
+    display: flex;
+    gap: 1rem;
+    width: calc(100% + var(--gutter) * 2);
+    margin: 0 calc(var(--gutter) * -1);
+    padding: 0.5rem var(--gutter) 1rem;
+    overflow-x: auto;
+    list-style: none;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--gutter);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .consultorio__fotos::-webkit-scrollbar {
+    display: none;
+  }
+
+  .consultorio__foto {
+    flex: 0 0 min(72vw, 16rem);
+    overflow: hidden;
+    aspect-ratio: 3 / 4;
+    background: var(--cor-fundo-alt);
+    border-radius: 24px;
+    box-shadow: var(--sombra-suave);
+    scroll-snap-align: start;
+  }
+
+  .consultorio__foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* as fotos já são 3:4: aparecem inteiras */
+  }
+
+  /* Tablet: as 2 fotos cabem lado a lado, centralizadas (sem fileira deslizante). */
+  @media (min-width: 48rem) {
+    .consultorio__fotos {
+      justify-content: center;
+      width: auto;
+      margin-inline: 0;
+      padding-inline: 0;
+      overflow: visible;
+    }
+  }
+
+  /* PC: vídeo à esquerda e as 2 fotos empilhadas à direita (juntas, com a mesma altura do vídeo). */
+  @media (min-width: 64rem) {
+    .consultorio__grade {
+      grid-template-columns: auto auto;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      --alt: clamp(30rem, calc(100vh - 12rem), 38rem);
+      --alt: clamp(30rem, calc(100svh - 12rem), 38rem);
+    }
+
+    .consultorio__fotos {
+      flex-direction: column;
+      gap: 1rem;
+      width: auto;
+      margin: 0;
+      padding: 0;
+      overflow: visible;
+    }
+
+    .consultorio__foto {
+      flex: none;
+      /* cada foto tem metade da altura do vídeo (menos meio vão); a largura sai da proporção 3:4 */
+      height: calc((var(--alt) - 1rem) / 2);
+    }
+  }
+
+  /* ===== Parte 2: contato ===== */
+  .agendar {
+    margin-top: clamp(4rem, 10vw, 6.5rem);
+  }
+
+  .agendar__botoes {
+    display: grid;
+    gap: 0.875rem;
+    justify-items: center;
+    margin-top: 2rem;
+  }
+
+  .botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: min(100%, 26rem);
+    min-height: 56px;
+    padding: 0.75rem 1.75rem;
+    border: 1.5px solid var(--cor-primaria);
+    border-radius: 999px;
+    font-family: var(--fonte-texto);
+    font-size: 1.0625rem;
+    font-weight: 500;
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+    text-wrap: balance;
+  }
+
+  .botao__icone {
+    flex: none;
+  }
+
+  .botao:focus-visible {
+    outline: 3px solid var(--cor-primaria);
+    outline-offset: 3px;
+  }
+
+  /* Principal: bordô, grande, com o ícone do WhatsApp. */
+  .botao--primario {
+    background: var(--cor-primaria);
+    box-shadow: 0 12px 26px -12px color-mix(in srgb, var(--cor-primaria) 75%, transparent);
+    color: var(--cor-sobre-primaria);
+  }
+
+  /* Secundário: só contorno, com o ícone do Instagram. */
+  .botao--secundario {
+    background: transparent;
+    color: var(--cor-primaria);
+  }
+
+  .botao:active {
+    transform: scale(0.98);
+  }
+
+  @media (hover: hover) {
+    .botao--primario:hover {
+      background: var(--cor-secundaria);
+      border-color: var(--cor-secundaria);
+    }
+
+    .botao--secundario:hover {
+      background: var(--cor-fundo);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .botao {
+      transition:
+        background-color 250ms ease,
+        border-color 250ms ease,
+        transform 150ms ease;
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .agendar__botoes {
+      grid-auto-flow: column;
+      justify-content: center;
+    }
+
+    .botao {
+      width: auto;
+      min-width: 17rem;
+    }
+  }
+
+  /* Cartão de informações: 2 colunas iguais, alinhadas pelo topo. Fundo em bordô bem escuro (a cor primária
+     misturada com um pouco do marrom do texto: mais leve e quente que o marrom quase preto, e conversa com os títulos),
+     rótulos pequenos em maiúsculas na cor rosé e textos em nude claro. Contraste AA: rosé sobre o fundo ~6,4:1 e nude
+     ~11:1. */
+  .cartao {
+    --cartao-fundo: color-mix(in srgb, var(--cor-primaria) 74%, var(--cor-texto));
+
+    display: grid;
+    gap: 0;
+    max-width: 44rem;
+    margin: 2.5rem auto 0;
+    padding: 0.5rem 1.5rem;
+    background: var(--cartao-fundo);
+    border-radius: 28px;
+    box-shadow: var(--sombra-suave);
+    color: var(--cor-fundo);
+  }
+
+  .cartao__item {
+    padding: 1.25rem 0;
+  }
+
+  .cartao__item + .cartao__item {
+    border-top: 1px solid color-mix(in srgb, var(--cor-destaque) 28%, transparent);
+  }
+
+  .cartao__rotulo {
+    margin: 0 0 0.5rem;
+    color: var(--cor-destaque);
+    font-family: var(--fonte-texto);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .cartao__texto {
+    margin: 0 0 0.2rem;
+    color: var(--cor-fundo);
+    font-size: 1.0625rem;
+    line-height: 1.45;
+  }
+
+  /* Linha de apoio, menor: endereço e "consulte disponibilidade". */
+  /* Cada local (nome, endereço e referência) forma um bloco; o segundo tem um respiro em cima. */
+  .cartao__local + .cartao__local {
+    margin-top: 0.75rem;
+  }
+
+  .cartao__local > p {
+    margin-bottom: 0;
+  }
+
+  /* Referência (Itirapina): ainda menor e em itálico. */
+  .cartao__referencia {
+    margin: 0.15rem 0 0;
+    color: color-mix(in srgb, var(--cor-fundo) 70%, var(--cartao-fundo));
+    font-size: 0.875rem;
+    font-style: italic;
+    line-height: 1.45;
+  }
+
+  .cartao__detalhe {
+    margin: 0.4rem 0 0;
+    color: color-mix(in srgb, var(--cor-fundo) 82%, var(--cartao-fundo));
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+
+  @media (min-width: 48rem) {
+    .cartao {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+      padding: 2rem 2.5rem;
+    }
+
+    .cartao__item {
+      padding: 0;
+    }
+
+    .cartao__item + .cartao__item {
+      padding-left: 2.5rem;
+      border-top: 0;
+      border-left: 1px solid color-mix(in srgb, var(--cor-destaque) 28%, transparent);
+    }
+  }
+
+  /* Fechamento: a seda (Seda.astro) fica atrás; o slogan e o monograma ficam acima dela. */
+  .agendar__fim {
+    position: relative;
+  }
+
+  .agendar__fecho,
+  .agendar__selo {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Fechamento: o slogan, em EB Garamond, centralizado. */
+  .agendar__fecho {
+    max-width: 38rem;
+    margin: clamp(2.5rem, 7vw, 4rem) auto 0;
+    color: var(--cor-primaria);
+    font-family: var(--fonte-titulo);
+    font-size: clamp(1.5rem, 5vw, 2.25rem);
+    font-weight: 500;
+    line-height: 1.3;
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  /* Monograma GW pequeno, centralizado, com bastante respiro: fecha a página (o rodapé vem logo abaixo). */
+  /* A folga acima do logo (slogan -> logo) é igual à de baixo (logo -> linha do rodapé): o fim da seção tem a mesma folga,
+     menos o respiro de 1,5rem que o rodapé já tem em cima. */
+  .contato {
+    --selo-folga: clamp(3.5rem, 9vw, 5.5rem);
+
+    padding-bottom: calc(var(--selo-folga) - 1.5rem);
+  }
+
+  .agendar__selo {
+    width: clamp(4.5rem, 15vw, 6rem);
+    height: auto;
+    margin: var(--selo-folga) auto 0;
+    overflow: visible;
+    display: block; /* SVG embutido é inline por padrão: sem block, o margin auto não o centraliza */
+  }
+
+  /* Estado final (e o que aparece sem JavaScript ou com prefers-reduced-motion): logo pronto. */
+  .agendar__selo-forma {
+    fill: var(--cor-logo);
+    stroke: none;
+  }
+
+  /* "Desenho" uma única vez, quando o logo entra na tela: primeiro o contorno é traçado (1,5 s), depois o preenchimento
+     aparece com fade enquanto o traço some, como na Abertura. Antes de entrar na tela, o logo fica "por desenhar". */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.js:not(.js-sem-script)) .agendar__selo-forma {
+      stroke: var(--cor-logo);
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      stroke-linecap: butt;
+      stroke-linejoin: round;
+      stroke-width: 240; /* unidades do desenho original (~1,2 px na tela, no tamanho pequeno do fechamento) */
+      fill-opacity: 0;
+    }
+
+    :global(.js:not(.js-sem-script)) .agendar__selo:global(.revelado) .agendar__selo-forma {
+      animation:
+        selo-tracar 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both,
+        selo-preencher 0.4s ease-out 1.6s both;
+    }
+
+  }
+
+
+  @keyframes selo-tracar {
+    from {
+      stroke-dashoffset: 1;
+    }
+
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes selo-preencher {
+    from {
+      fill-opacity: 0;
+      stroke-opacity: 1;
+    }
+
+    to {
+      fill-opacity: 1;
+      stroke-opacity: 0;
+    }
+  }
+
+  /* Janelas baixas no PC (também é o caso de telas com zoom de 125%): reduz o respiro entre os blocos para "Vamos
+     cuidar de você?" + botões + cartão + slogan + monograma caberem inteiros na tela ao tocar em "Contato" no menu.
+     (Fica por último para vencer as regras de margem acima.) */
+  @media (min-width: 64rem) and (max-height: 52rem) {
+    .agendar__botoes {
+      margin-top: 1.25rem;
+    }
+
+    .cartao {
+      margin-top: 1.5rem;
+    }
+
+    .agendar__fecho {
+      margin-top: 1.75rem;
+      font-size: 1.75rem;
+    }
+
+    .contato {
+      --selo-folga: 1.75rem;
+    }
+
+    .agendar__selo {
+      width: 4.5rem;
+    }
+  }
+</style>

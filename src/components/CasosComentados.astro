@@ -1,0 +1,51 @@
+---
+// Seção 5, parte 2: "Veja de perto". Botão "Ver mais" que abre uma gaveta (celular) ou janela (PC)
+// com 3 vídeos. Dados em src/content/depoimentos.ts; a gaveta é montada por src/scripts/casos-comentados.js.
+import '../styles/casos-comentados.css';
+import '../styles/controles-video.css';
+import { casosComentados as casos } from '../content/depoimentos';
+---
+
+<div class="casos" data-toque={casos.toque}>
+  <div class="casos__acao" data-reveal="subir">
+    <!-- Sem JavaScript: o link leva aos vídeos listados logo abaixo. Com JavaScript, vira o botão. -->
+    <a class="casos__botao casos__botao--link" href="#casos-comentados">{casos.botao}</a>
+    <button class="casos__botao casos__botao--abrir" type="button" aria-haspopup="dialog" aria-expanded="false">
+      {casos.botao}
+    </button>
+  </div>
+
+  <!-- Com JavaScript, este bloco é movido para dentro do <dialog>. -->
+  <div class="casos__conteudo" id="casos-comentados">
+    <h3 class="casos__titulo" id="casos-titulo">{casos.titulo}</h3>
+    <ol class="casos__lista">
+      {
+        casos.videos.map((v) => (
+          <li class="casos__item">
+            <figure class="casos__figura">
+              <div class="casos__quadro">
+                <video
+                  class="casos__video"
+                  controls
+                  playsinline
+                  preload="none"
+                  poster={v.poster}
+                  width={v.largura}
+                  height={v.altura}
+                  aria-label={v.legenda}
+                >
+                  <source src={v.src} type="video/mp4" />
+                </video>
+              </div>
+              <figcaption class="casos__legenda">{v.legenda}</figcaption>
+            </figure>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</div>
+
+<script>
+  import '../scripts/casos-comentados.js';
+</script>

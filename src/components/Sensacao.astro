@@ -1,0 +1,129 @@
+---
+// Seção 2: "Sabe aquela sensação?". Textos em src/content/sensacao.ts.
+import { sensacao } from '../content/sensacao';
+---
+
+<section class="secao sensacao" id="sensacao" aria-labelledby="sensacao-titulo">
+  <div class="secao__miolo">
+    <h2 class="sensacao__titulo" id="sensacao-titulo" data-reveal="subir">{sensacao.titulo}</h2>
+
+    <ul
+      class="sensacao__cards"
+      tabindex="0"
+      aria-label="Situações em que o NaLift pode ajudar"
+      data-reveal="escalonado"
+      data-reveal-observar="filhos"
+      data-reveal-limiar="0.01"
+    >
+      {
+        sensacao.cards.map((card) => (
+          <li class="sensacao__card">
+            <h3 class="sensacao__card-titulo">{card.titulo}</h3>
+            <p class="sensacao__card-texto">{card.texto}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="sensacao__fechamento" data-reveal="subir">{sensacao.fechamento}</p>
+  </div>
+</section>
+
+<style>
+  .sensacao__titulo {
+    margin-bottom: 1.75rem;
+    text-align: center;
+  }
+
+  /* Celular: carrossel com scroll-snap; o próximo card aparece pela metade. */
+  .sensacao__cards {
+    display: flex;
+    gap: 1rem;
+    margin: 0 calc(var(--gutter) * -1);
+    padding: 0.5rem var(--gutter) 1.5rem;
+    overflow-x: auto;
+    list-style: none;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--gutter);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sensacao__cards::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sensacao__card {
+    flex: 0 0 min(78vw, 19rem);
+    padding: 1.5rem 1.5rem 1.75rem;
+    background: var(--cor-fundo);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra-suave);
+    scroll-snap-align: start;
+  }
+
+  .sensacao__card::before {
+    display: block;
+    width: 2rem;
+    height: 2px;
+    margin-bottom: 1.25rem;
+    background: var(--cor-secundaria);
+    content: '';
+  }
+
+  .sensacao__card-titulo {
+    margin: 0 0 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .sensacao__card-texto {
+    margin: 0;
+  }
+
+  .sensacao__fechamento {
+    max-width: 38rem;
+    margin: 1rem auto 0;
+    color: var(--cor-primaria);
+    font-family: var(--fonte-titulo);
+    font-size: clamp(1.375rem, 4.5vw, 1.75rem);
+    font-weight: 500;
+    line-height: 1.3;
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  /* Tablet: 2 colunas, sem deslizar. */
+  @media (min-width: 48rem) {
+    .sensacao__titulo {
+      margin-bottom: 2.5rem;
+    }
+
+    .sensacao__cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      margin: 0;
+      padding: 0;
+      overflow: visible;
+      scroll-snap-type: none;
+    }
+
+    .sensacao__card {
+      flex: none;
+    }
+
+    .sensacao__fechamento {
+      margin-top: 2.5rem;
+    }
+  }
+
+  /* PC: os 4 cards lado a lado. */
+  @media (min-width: 64rem) {
+    .sensacao__cards {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+  }
+</style>

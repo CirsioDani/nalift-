@@ -1,0 +1,405 @@
+---
+// Seção 5: "Depoimentos", parte 1 ("Quem já viveu o NaLift"). Dados em src/content/depoimentos.ts.
+//  - Celular e tablet (<1024px): carrossel em profundidade (src/scripts/carrossel-profundidade.js).
+//  - PC (≥1024px, com JavaScript): vídeo em destaque + playlist (src/scripts/depoimentos.js), no mesmo padrão da seção
+//    "Bate-bola": um bloco único centralizado, vídeo à esquerda e, à direita, título, linha de apoio, a playlist e o
+//    botão "Ver mais", tudo alinhado ao centro do vídeo.
+//  - Sem JavaScript: os 4 vídeos em sequência, com os controles do navegador.
+import '../styles/carrossel-profundidade.css';
+import '../styles/controles-video.css';
+import { depoimentos } from '../content/depoimentos';
+import CasosComentados from './CasosComentados.astro';
+
+const itens = depoimentos.videos.map((v) => ({ src: v.src, poster: v.poster, alt: v.alt, titulo: v.titulo }));
+const primeiro = depoimentos.videos[0];
+---
+
+<section class="secao depoimentos" id="depoimentos" aria-labelledby="depoimentos-titulo">
+  <div class="secao__miolo">
+    <div class="depoimentos__bloco">
+      <h2 class="depoimentos__titulo" id="depoimentos-titulo" data-reveal="subir">{depoimentos.titulo}</h2>
+      <p class="depoimentos__instrucao" data-reveal="subir">
+        <span class="depoimentos__instrucao-cel">{depoimentos.instrucao}</span><span class="depoimentos__instrucao-pc">{depoimentos.instrucaoPc}</span>
+      </p>
+
+      <!-- Sem JavaScript: os vídeos aparecem em sequência, com os controles do navegador. Com JavaScript esta lista fica
+           escondida (carrossel no celular, destaque + playlist no PC). -->
+      <ol class="depoimentos__lista" aria-label={depoimentos.rotuloCarrossel}>
+        {
+          depoimentos.videos.map((v) => (
+            <li class="depoimentos__item">
+              <video
+                class="depoimentos__video-lista"
+                controls
+                playsinline
+                preload="none"
+                poster={v.poster}
+                width={v.largura}
+                height={v.altura}
+                aria-label={v.alt}
+              >
+                <source src={v.src} type="video/mp4" />
+              </video>
+            </li>
+          ))
+        }
+      </ol>
+
+      <!-- Celular e tablet: o carrossel não tem entrada própria: entra em zoom suave. (Os efeitos internos dele são dele.) -->
+      <div
+        class="depoimentos__carrossel"
+        data-reveal="zoom"
+        data-itens={JSON.stringify(itens)}
+        data-rotulo={depoimentos.rotuloCarrossel}
+      >
+      </div>
+
+      <!-- PC: vídeo em destaque (começa no caso-06; o clique na playlist troca o vídeo, com fade). -->
+      <div class="depoimentos__destaque" data-reveal="zoom">
+        <div class="depoimentos__quadro">
+          <video
+            class="depoimentos__video-destaque"
+            controls
+            playsinline
+            preload="none"
+            poster={primeiro.poster}
+            src={primeiro.src}
+            width={primeiro.largura}
+            height={primeiro.altura}
+            aria-label={primeiro.titulo}
+          >
+          </video>
+        </div>
+      </div>
+
+      <!-- PC: playlist no estilo do índice do Bate-bola (linhas finas): miniatura, título e duração. -->
+      <ul class="depoimentos__playlist" aria-label={depoimentos.rotuloCarrossel} data-reveal="escalonado">
+        {
+          depoimentos.videos.map((v, i) => (
+            <li>
+              <button class="depoimentos__faixa" type="button" data-i={i} aria-label={`${v.titulo} (${v.rotuloDuracao})`}>
+                <img
+                  class="depoimentos__miniatura"
+                  src={v.poster}
+                  alt=""
+                  width="40"
+                  height="71"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span class="depoimentos__faixa-titulo">{v.titulo}</span>
+                <span class="depoimentos__faixa-duracao" aria-hidden="true">{v.rotuloDuracao}</span>
+              </button>
+            </li>
+          ))
+        }
+      </ul>
+
+      <!-- Parte 2: "Veja de perto", extra que abre por botão (gaveta no celular, janela no PC). -->
+      <CasosComentados />
+    </div>
+  </div>
+</section>
+
+<script>
+  import '../scripts/depoimentos.js';
+</script>
+
+<style>
+  .depoimentos h2,
+  .depoimentos__instrucao {
+    text-align: center;
+  }
+
+  /* O texto de ajuda muda no PC. */
+  .depoimentos__instrucao-pc {
+    display: none;
+  }
+
+  .depoimentos__instrucao {
+    margin-bottom: 0;
+    color: var(--cor-secundaria);
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+  }
+
+  /* Sem JavaScript: vídeos em sequência, inteiros (9:16), sem cortar. */
+  .depoimentos__lista {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 14rem));
+    justify-content: center;
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .depoimentos__video-lista {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 9 / 16;
+    background: var(--cor-fundo-alt);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra-suave);
+  }
+
+  .depoimentos__carrossel,
+  .depoimentos__destaque,
+  .depoimentos__playlist {
+    display: none;
+  }
+
+  /* Com JavaScript, abaixo de 1024px: o carrossel substitui a lista. Cabe numa tela de celular. */
+  @media (max-width: 63.999rem) {
+    .depoimentos--interativo .depoimentos__lista {
+      display: none;
+    }
+  }
+
+  .depoimentos--interativo .depoimentos__carrossel {
+    /* grid (e não block): o CSS do carrossel usa duas linhas, cartas e controles; com block a área
+       das cartas colapsa para altura zero. */
+    display: grid;
+    height: min(40rem, 84vh);
+    height: min(40rem, 84svh);
+    /* Celular: de ponta a ponta da tela. A largura é explícita porque o CSS do carrossel define
+       width: 100%, que com a margem negativa deslocaria o quadro para um lado. */
+    width: calc(100% + var(--gutter) * 2);
+    margin: 1rem calc(var(--gutter) * -1) 0;
+  }
+
+  @media (min-width: 40rem) {
+    .depoimentos--interativo .depoimentos__carrossel {
+      width: 100%;
+      max-width: 40rem;
+      margin: 1rem auto 0;
+    }
+  }
+
+  /* ===== PC (a partir de 1024px, com JavaScript): vídeo em destaque + playlist (decisão do usuário, 11/11/2026) =====
+     Mesmo padrão da seção "Bate-bola": UM bloco centralizado (máx. 60rem), 56px entre as colunas. Esquerda: o vídeo
+     (9:16, até 75% da altura da tela). Direita, alinhada ao centro do vídeo: título, linha de apoio, playlist e "Ver mais". */
+  @media (min-width: 64rem) {
+    .depoimentos__instrucao-cel {
+      display: none;
+    }
+
+    .depoimentos__instrucao-pc {
+      display: inline;
+    }
+
+    .depoimentos--interativo .depoimentos__lista,
+    .depoimentos--interativo .depoimentos__carrossel {
+      display: none;
+    }
+
+    .depoimentos--interativo .depoimentos__destaque {
+      display: block;
+    }
+
+    .depoimentos--interativo .depoimentos__playlist {
+      display: block;
+    }
+
+    .depoimentos--interativo .depoimentos__bloco {
+      --depoimentos-alt: clamp(24rem, 75vh, 40rem);
+      --depoimentos-alt: clamp(24rem, 75svh, 40rem);
+
+      display: grid;
+      grid-template-areas:
+        'video .'
+        'video titulo'
+        'video intro'
+        'video lista'
+        'video mais'
+        'video .';
+      grid-template-columns: auto minmax(0, 30rem);
+      grid-template-rows: minmax(0, 1fr) auto auto auto auto minmax(0, 1fr);
+      justify-content: center;
+      max-width: 60rem;
+      margin-inline: auto;
+      column-gap: 3.5rem;
+    }
+
+    .depoimentos--interativo .depoimentos__titulo {
+      grid-area: titulo;
+      margin: 0 0 0.75rem;
+      text-align: left;
+    }
+
+    .depoimentos--interativo .depoimentos__instrucao {
+      grid-area: intro;
+      margin: 0 0 1.5rem;
+      font-size: 1rem;
+      letter-spacing: 0;
+      text-align: left;
+    }
+
+    .depoimentos--interativo .depoimentos__destaque {
+      grid-area: video;
+      align-self: center;
+      justify-self: end;
+    }
+
+    .depoimentos--interativo .depoimentos__playlist {
+      grid-area: lista;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .depoimentos--interativo .depoimentos__bloco > :global(.casos) {
+      grid-area: mais;
+      margin-top: 1.5rem;
+      text-align: left;
+    }
+
+    /* Quadro do vídeo em destaque: 9:16 inteiro, cantos arredondados e sombra suave. O fade ao trocar de vídeo é aqui. */
+    .depoimentos__quadro {
+      position: relative;
+      height: var(--depoimentos-alt);
+      overflow: hidden;
+      aspect-ratio: 9 / 16;
+      background: var(--cor-fundo-alt);
+      border-radius: var(--raio);
+      box-shadow: var(--sombra-suave);
+    }
+
+    .depoimentos__video-destaque {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      object-fit: contain;
+    }
+
+    /* O play central é menor e não cobre as frases que já vêm escritas no vídeo (ficam acima e abaixo do centro). Sem o
+       rótulo "Toque para assistir": a linha de apoio já diz "Clique num depoimento para assistir". */
+    .depoimentos__quadro :global(.cv__play-icone) {
+      width: 52px;
+      height: 52px;
+    }
+
+    .depoimentos__quadro :global(.cv__play-icone svg) {
+      width: 24px;
+      height: 24px;
+    }
+
+    .depoimentos__quadro :global(.cv__play-texto) {
+      display: none;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .depoimentos__quadro {
+        transition: opacity 200ms ease;
+      }
+    }
+
+    .depoimentos__quadro.trocando {
+      opacity: 0;
+    }
+
+    /* ----- Playlist: cada linha tem miniatura (poster, cantos arredondados), título e duração, com linhas finas
+       entre os itens (como o índice do Bate-bola). O item em destaque fica em bordô, com uma barra fina de progresso. ----- */
+    .depoimentos__faixa {
+      position: relative;
+      display: grid;
+      grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      min-height: 5.5rem;
+      padding: 0.625rem 0.5rem;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid color-mix(in srgb, var(--cor-primaria) 18%, transparent);
+      color: var(--cor-texto);
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+    }
+
+    .depoimentos__playlist li:first-child .depoimentos__faixa {
+      border-top: 1px solid color-mix(in srgb, var(--cor-primaria) 18%, transparent);
+    }
+
+    .depoimentos__miniatura {
+      display: block;
+      width: 2.5rem;
+      height: auto;
+      aspect-ratio: 9 / 16;
+      object-fit: cover;
+      background: var(--cor-fundo-alt);
+      border-radius: 8px;
+    }
+
+    .depoimentos__faixa-titulo {
+      font-family: var(--fonte-titulo);
+      font-size: 1.375rem;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+
+    .depoimentos__faixa-duracao {
+      color: var(--cor-secundaria);
+      font-family: var(--fonte-titulo);
+      font-size: 1.1875rem;
+      font-variant-numeric: lining-nums;
+      font-weight: 500;
+    }
+
+    /* Barra fina de progresso do vídeo em destaque (--prog de 0 a 1, definida por depoimentos.js). */
+    .depoimentos__faixa::after {
+      position: absolute;
+      right: 0;
+      bottom: -1px;
+      left: 0;
+      height: 2px;
+      background: var(--cor-primaria);
+      content: '';
+      opacity: 0;
+      transform: scaleX(var(--prog, 0));
+      transform-origin: left center;
+    }
+
+    @media (hover: hover) {
+      .depoimentos__faixa:hover {
+        background: color-mix(in srgb, var(--cor-fundo-alt) 55%, transparent);
+      }
+    }
+
+    .depoimentos__faixa[aria-current='true'],
+    .depoimentos__faixa[aria-current='true']:hover {
+      background: transparent;
+      color: var(--cor-primaria);
+    }
+
+    .depoimentos__faixa[aria-current='true'] .depoimentos__faixa-duracao {
+      color: var(--cor-primaria);
+    }
+
+    .depoimentos__faixa[aria-current='true']::after {
+      opacity: 1;
+    }
+
+    .depoimentos__faixa:focus-visible {
+      outline: 3px solid var(--cor-primaria);
+      outline-offset: -3px;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .depoimentos__faixa {
+        transition:
+          background-color 250ms ease,
+          color 250ms ease;
+      }
+
+      .depoimentos__faixa::after {
+        transition:
+          transform 300ms linear,
+          opacity 250ms ease;
+      }
+    }
+  }
+</style>

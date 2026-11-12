@@ -1,0 +1,136 @@
+---
+// Seção 4: "Resultados". Textos e fotos em src/content/resultados.ts.
+import '../styles/carrossel-circular.css';
+import { resultados } from '../content/resultados';
+
+const itens = resultados.casos.map((c) => ({
+  src: c.webp,
+  srcset: c.srcset,
+  alt: c.alt,
+  title: c.titulo,
+  subtitle: c.legenda || undefined,
+}));
+const proporcao = (resultados.casos[0].largura / resultados.casos[0].altura).toFixed(4);
+---
+
+<section class="secao resultados" id="resultados" aria-labelledby="resultados-titulo">
+  <div class="secao__miolo">
+    <h2 id="resultados-titulo" data-reveal="subir">{resultados.titulo}</h2>
+    <p class="resultados__texto" data-reveal="subir">{resultados.texto}</p>
+
+    <!-- Sem JavaScript: as 3 fotos aparecem em sequência, inteiras. Com JavaScript, viram o carrossel. -->
+    <ol class="resultados__lista" aria-label={resultados.rotuloCarrossel}>
+      {
+        resultados.casos.map((caso) => (
+          <li class="resultados__item">
+            <figure class="resultados__foto">
+              <picture>
+                <source type="image/webp" srcset={caso.srcset} sizes="(min-width: 40rem) 24rem, calc(100vw - 2.5rem)" />
+                <img
+                  src={caso.jpg}
+                  alt={caso.alt}
+                  width={caso.largura}
+                  height={caso.altura}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
+            </figure>
+          </li>
+        ))
+      }
+    </ol>
+
+    <!-- O carrossel tem entrada própria (a introdução "rise" do anel), que roda quando ele aparece na tela. -->
+    <div
+      class="resultados__carrossel"
+      data-itens={JSON.stringify(itens)}
+      data-proporcao={proporcao}
+      data-rotulo={resultados.rotuloCarrossel}
+    >
+    </div>
+  </div>
+</section>
+
+<script>
+  import '../scripts/resultados.js';
+</script>
+
+<style>
+  .resultados h2,
+  .resultados__texto {
+    text-align: center;
+  }
+
+  .resultados__texto {
+    max-width: 34rem;
+    margin-inline: auto;
+  }
+
+  /* Sem JavaScript: fotos em sequência, inteiras e sem corte. */
+  .resultados__lista {
+    display: grid;
+    gap: 1.5rem;
+    justify-items: center;
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .resultados__item {
+    width: min(100%, 24rem);
+  }
+
+  .resultados__foto {
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--cor-fundo);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra-suave);
+  }
+
+  .resultados__foto img {
+    width: 100%;
+    height: auto;
+  }
+
+  .resultados__carrossel {
+    display: none;
+  }
+
+  /* Com JavaScript: o carrossel substitui a lista. Altura que cabe numa tela de celular. */
+  .resultados--interativo .resultados__lista {
+    display: none;
+  }
+
+  .resultados--interativo .resultados__carrossel {
+    display: block;
+    height: min(34rem, 78vh);
+    height: min(34rem, 78svh);
+    /* Celular: de ponta a ponta da tela, para as fotos poderem ser maiores (sem rolagem horizontal).
+       A largura é explícita porque o CSS do carrossel define width: 100%, que com a margem negativa
+       deslocaria o quadro para a esquerda e deixaria um vazio só do lado direito. */
+    width: calc(100% + var(--gutter) * 2);
+    margin: 1rem calc(var(--gutter) * -1) 0;
+  }
+
+  /* Largura limitada: num quadro muito largo, o panorama amplia demais as fotos vizinhas. */
+  @media (min-width: 40rem) {
+    .resultados--interativo .resultados__carrossel {
+      width: 100%;
+      max-width: 36rem;
+      margin: 1rem auto 0;
+    }
+  }
+
+  /* PC: o carrossel usa a largura toda do miolo da seção (até ~1088px, centralizado), para as fotos vizinhas
+     aparecerem com folga ao lado da que está na frente (veja `vizinhas` em resultados.js); as laterais se dissolvem. */
+  @media (min-width: 64rem) {
+    .resultados--interativo .resultados__carrossel {
+      width: 100%;
+      max-width: none;
+      height: min(38rem, 78svh);
+    }
+  }
+</style>
