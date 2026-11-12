@@ -54,8 +54,3 @@ npm run dev
 O site abre em `http://localhost:4321`. Para gerar a versão de produção: `npm run build` (a saída vai para `dist/`).
 
 > **Observação sobre a mídia:** a pasta `public/midia/` não está no repositório (exceto o logo e as fitas de seda), porque contém fotos e vídeos de clientes. O site roda e o build funciona, mas as fotos e os vídeos de antes e depois, depoimentos e do consultório não aparecem.
-
-## Créditos
-
-- Desenvolvimento: Daniel
-- Cliente: Gabriela Nalin (Nalin Beauty)
